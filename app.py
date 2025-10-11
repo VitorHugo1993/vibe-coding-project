@@ -1534,86 +1534,73 @@ def create_credential_tab():
         return
     
     
-    with st.form("create_credential_form"):
-        st.subheader("📝 Credential Information")
-        
+    st.subheader("📝 Credential Information")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        supplier = st.text_input(
+            "Supplier Name:",
+            placeholder="e.g., Expedia, Booking.com",
+            help="Name of the API supplier",
+            key="create_supplier"
+        )
+        environment = st.selectbox(
+            "Environment:",
+            ["production", "sandbox", "staging", "development"],
+            help="Target environment for the credential",
+            key="create_environment"
+        )
+    
+    with col2:
+        auth_type = st.selectbox(
+            "Authentication Type:",
+            ["api_key", "username_password"],
+            help="Type of authentication required",
+            key="create_auth_type"
+        )
+        created_by = st.text_input(
+            "Created By:",
+            value=f"{st.session_state.current_role}@demo.com",
+            disabled=True,
+            help="User creating the credential"
+        )
+    
+    st.subheader("🔑 Authentication Data")
+    
+    credential_data = {}
+    
+    if auth_type == "api_key":
+        api_key = st.text_input(
+            "API Key:",
+            placeholder="Enter the API key",
+            help="The API key provided by the supplier",
+            key="create_api_key"
+        )
+        if api_key:
+            credential_data = {"api_key": api_key}
+    
+    elif auth_type == "username_password":
         col1, col2 = st.columns(2)
-        
         with col1:
-            supplier = st.text_input(
-                "Supplier Name:",
-                placeholder="e.g., Expedia, Booking.com",
-                help="Name of the API supplier",
-                key="create_supplier"
+            username = st.text_input(
+                "Username:",
+                placeholder="Enter username",
+                help="Username for authentication",
+                key="create_username"
             )
-            environment = st.selectbox(
-                "Environment:",
-                ["production", "sandbox", "staging", "development"],
-                help="Target environment for the credential",
-                key="create_environment"
-            )
-        
         with col2:
-            auth_type = st.selectbox(
-                "Authentication Type:",
-                ["api_key", "username_password"],
-                help="Type of authentication required",
-                key="create_auth_type"
+            password = st.text_input(
+                "Password:",
+                placeholder="Enter password",
+                type="password",
+                help="Password for authentication",
+                key="create_password"
             )
-            created_by = st.text_input(
-                "Created By:",
-                value=f"{st.session_state.current_role}@demo.com",
-                disabled=True,
-                help="User creating the credential"
-            )
-        
-        st.subheader("🔑 Authentication Data")
-        
-        # Clear form fields when auth type changes
-        if 'previous_auth_type' not in st.session_state:
-            st.session_state.previous_auth_type = auth_type
-        
-        if st.session_state.previous_auth_type != auth_type:
-            # Clear the form fields when auth type changes
-            if 'create_api_key' in st.session_state:
-                del st.session_state.create_api_key
-            if 'create_username' in st.session_state:
-                del st.session_state.create_username
-            if 'create_password' in st.session_state:
-                del st.session_state.create_password
-            st.session_state.previous_auth_type = auth_type
-        
-        credential_data = {}
-        
-        if auth_type == "api_key":
-            api_key = st.text_input(
-                "API Key:",
-                placeholder="Enter the API key",
-                help="The API key provided by the supplier",
-                key="create_api_key"
-            )
-            if api_key:
-                credential_data = {"api_key": api_key}
-        
-        elif auth_type == "username_password":
-            col1, col2 = st.columns(2)
-            with col1:
-                username = st.text_input(
-                    "Username:",
-                    placeholder="Enter username",
-                    help="Username for authentication",
-                    key="create_username"
-                )
-            with col2:
-                password = st.text_input(
-                    "Password:",
-                    placeholder="Enter password",
-                    type="password",
-                    help="Password for authentication",
-                    key="create_password"
-                )
-            if username and password:
-                credential_data = {"username": username, "password": password}
+        if username and password:
+            credential_data = {"username": username, "password": password}
+    
+    with st.form("create_credential_form"):
         
         st.subheader("⚙️ Additional Options")
         

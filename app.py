@@ -1238,14 +1238,14 @@ def main():
         # Display actual logo image
         st.markdown(f"""
         <div style="text-align: left; margin-bottom: 1rem;">
-            <img src="{logo_data}" style="height: 60px; width: auto; max-width: 200px;" alt="Nezasa Logo">
+            <img src="{logo_data}" style="height: 80px; width: auto; max-width: 250px;" alt="Nezasa Logo">
         </div>
         """, unsafe_allow_html=True)
     else:
         # Fallback to text logo
         st.markdown("""
         <div style="text-align: left; margin-bottom: 1rem;">
-            <div style="color: #dc3545; font-weight: bold; font-size: 2.2rem;">NEZASA</div>
+            <div style="color: #dc3545; font-weight: bold; font-size: 2.8rem;">NEZASA</div>
         </div>
         """, unsafe_allow_html=True)
     

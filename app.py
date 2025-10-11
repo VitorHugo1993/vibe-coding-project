@@ -439,15 +439,41 @@ st.markdown("""
     
     /* Additional expander states */
     .streamlit-expanderHeader[data-testid="streamlit-expanderHeader"] {
-        background-color: #f8f9fa !important;
-        color: black !important;
+        background-color: #dc3545 !important;
+        color: white !important;
     }
     
     /* Focus state for accessibility */
     .streamlit-expanderHeader:focus {
-        background-color: #f8f9fa !important;
-        color: black !important;
+        background-color: #dc3545 !important;
+        color: white !important;
         outline: 2px solid #dc3545 !important;
+    }
+    
+    /* More specific targeting for expander headers */
+    .streamlit-expanderHeader:hover,
+    .streamlit-expanderHeader[aria-expanded="true"],
+    .streamlit-expanderHeader[data-testid="streamlit-expanderHeader"]:hover,
+    .streamlit-expanderHeader[data-testid="streamlit-expanderHeader"][aria-expanded="true"] {
+        background-color: #dc3545 !important;
+        color: white !important;
+    }
+    
+    /* Target the actual expander button */
+    .streamlit-expanderHeader button:hover {
+        background-color: #dc3545 !important;
+        color: white !important;
+    }
+    
+    /* Override any Streamlit default styling */
+    div[data-testid="streamlit-expanderHeader"] {
+        background-color: #dc3545 !important;
+        color: white !important;
+    }
+    
+    div[data-testid="streamlit-expanderHeader"]:hover {
+        background-color: #c82333 !important;
+        color: white !important;
     }
     
     /* Customize entire sidebar with darker red background */

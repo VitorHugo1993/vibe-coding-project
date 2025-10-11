@@ -812,7 +812,7 @@ def main():
     st.sidebar.title("🔑 Role Management")
     selected_role = st.sidebar.selectbox(
         "Select Role:",
-        ["admin", "devops", "cs", "partner"],
+        ["ADMIN", "DEVOPS", "CS", "PARTNER"],
         help="Choose a role to simulate different access levels"
     )
     
@@ -1056,13 +1056,28 @@ def create_credential_tab():
         
         st.subheader("🔑 Authentication Data")
         
+        # Clear form fields when auth type changes
+        if 'previous_auth_type' not in st.session_state:
+            st.session_state.previous_auth_type = auth_type
+        
+        if st.session_state.previous_auth_type != auth_type:
+            # Clear the form fields when auth type changes
+            if 'create_api_key' in st.session_state:
+                del st.session_state.create_api_key
+            if 'create_username' in st.session_state:
+                del st.session_state.create_username
+            if 'create_password' in st.session_state:
+                del st.session_state.create_password
+            st.session_state.previous_auth_type = auth_type
+        
         credential_data = {}
         
         if auth_type == "api_key":
             api_key = st.text_input(
                 "API Key:",
                 placeholder="Enter the API key",
-                help="The API key provided by the supplier"
+                help="The API key provided by the supplier",
+                key="create_api_key"
             )
             if api_key:
                 credential_data = {"api_key": api_key}
@@ -1073,14 +1088,16 @@ def create_credential_tab():
                 username = st.text_input(
                     "Username:",
                     placeholder="Enter username",
-                    help="Username for authentication"
+                    help="Username for authentication",
+                    key="create_username"
                 )
             with col2:
                 password = st.text_input(
                     "Password:",
                     placeholder="Enter password",
                     type="password",
-                    help="Password for authentication"
+                    help="Password for authentication",
+                    key="create_password"
                 )
             if username and password:
                 credential_data = {"username": username, "password": password}

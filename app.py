@@ -13,8 +13,8 @@ import base64
 
 # Page configuration
 st.set_page_config(
-    page_title="Nezasa Connect API Credential Management",
-   # page_icon="🔐",
+    page_title="API Credential Management",
+    page_icon="🔐",
     layout="wide",
     initial_sidebar_state="expanded"
 )

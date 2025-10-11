@@ -476,31 +476,32 @@ st.markdown("""
         color: white !important;
     }
     
-    /* Nuclear option - target all possible expander elements */
-    [data-testid="streamlit-expanderHeader"],
-    [data-testid="streamlit-expanderHeader"]:hover,
-    [data-testid="streamlit-expanderHeader"][aria-expanded="true"],
-    .streamlit-expanderHeader,
-    .streamlit-expanderHeader:hover,
-    .streamlit-expanderHeader[aria-expanded="true"],
-    .streamlit-expanderHeader button,
-    .streamlit-expanderHeader button:hover,
-    .streamlit-expanderHeader div,
-    .streamlit-expanderHeader div:hover {
+    /* Custom collapsible section styling */
+    .collapsible-header {
         background-color: #dc3545 !important;
         color: white !important;
-        background: #dc3545 !important;
+        padding: 0.75rem 1rem !important;
+        border-radius: 0.5rem !important;
+        cursor: pointer !important;
+        border: none !important;
+        width: 100% !important;
+        text-align: left !important;
+        font-weight: 500 !important;
+        transition: background-color 0.2s !important;
     }
     
-    /* Force override with maximum specificity */
-    .main .block-container .streamlit-expanderHeader {
-        background-color: #dc3545 !important;
-        color: white !important;
-    }
-    
-    .main .block-container .streamlit-expanderHeader:hover {
+    .collapsible-header:hover {
         background-color: #c82333 !important;
         color: white !important;
+    }
+    
+    .collapsible-content {
+        background-color: white !important;
+        border: 1px solid #dc3545 !important;
+        border-top: none !important;
+        border-radius: 0 0 0.5rem 0.5rem !important;
+        padding: 1rem !important;
+        margin-bottom: 1rem !important;
     }
     
     /* Customize entire sidebar with darker red background */
@@ -1410,9 +1411,23 @@ def dashboard_tab():
     cols = st.columns(min(len(credentials), 3))
     for i, cred in enumerate(credentials):
         with cols[i % 3]:
-            with st.expander(f"🔐 {cred['supplier']} ({cred['environment']})", expanded=False):
-                st.write(f"**ID:** {cred['id']}")
-                st.write(f"**Created:** {format_timestamp(cred['created_at'])}")
+            # Custom collapsible section
+            expander_key = f"expander_{cred['id']}"
+            is_expanded = st.session_state.get(expander_key, False)
+            
+            # Header button
+            if st.button(f"🔐 {cred['supplier']} ({cred['environment']})", key=f"header_{cred['id']}", help="Click to expand/collapse"):
+                st.session_state[expander_key] = not is_expanded
+                st.rerun()
+            
+            # Content (only show if expanded)
+            if is_expanded:
+                st.markdown(f"""
+                <div class="collapsible-content">
+                    <p><strong>ID:</strong> {cred['id']}</p>
+                    <p><strong>Created:</strong> {format_timestamp(cred['created_at'])}</p>
+                </div>
+                """, unsafe_allow_html=True)
                 
                 # View button (always available)
                 if st.button(f"👁️ View Details", key=f"view_{cred['id']}"):

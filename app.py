@@ -43,23 +43,9 @@ st.markdown("""
         border-radius: 0.25rem !important;
         padding: 0.25rem 1rem !important;
         font-weight: 500 !important;
-        width: 100% !important;
     }
     
     .stButton > button:hover {
-        background-color: #c82333 !important;
-        border-color: #bd2130 !important;
-        color: white !important;
-    }
-    
-    /* Ensure all buttons have consistent red styling */
-    button, .stButton button, div[data-testid="stButton"] button {
-        background-color: #dc3545 !important;
-        color: white !important;
-        border: 1px solid #dc3545 !important;
-    }
-    
-    button:hover, .stButton button:hover, div[data-testid="stButton"] button:hover {
         background-color: #c82333 !important;
         border-color: #bd2130 !important;
         color: white !important;
@@ -490,33 +476,6 @@ st.markdown("""
         color: white !important;
     }
     
-    /* Custom collapsible section styling */
-    .collapsible-header {
-        background-color: #dc3545 !important;
-        color: white !important;
-        padding: 0.75rem 1rem !important;
-        border-radius: 0.5rem !important;
-        cursor: pointer !important;
-        border: none !important;
-        width: 100% !important;
-        text-align: left !important;
-        font-weight: 500 !important;
-        transition: background-color 0.2s !important;
-    }
-    
-    .collapsible-header:hover {
-        background-color: #c82333 !important;
-        color: white !important;
-    }
-    
-    .collapsible-content {
-        background-color: white !important;
-        border: 1px solid #dc3545 !important;
-        border-top: none !important;
-        border-radius: 0 0 0.5rem 0.5rem !important;
-        padding: 1rem !important;
-        margin-bottom: 1rem !important;
-    }
     
     /* Customize entire sidebar with darker red background */
     .stSidebar {
@@ -1425,23 +1384,9 @@ def dashboard_tab():
     cols = st.columns(min(len(credentials), 3))
     for i, cred in enumerate(credentials):
         with cols[i % 3]:
-            # Custom collapsible section
-            expander_key = f"expander_{cred['id']}"
-            is_expanded = st.session_state.get(expander_key, False)
-            
-            # Header button with primary styling
-            if st.button(f"🔐 {cred['supplier']} ({cred['environment']})", key=f"header_{cred['id']}", help="Click to expand/collapse", type="primary"):
-                st.session_state[expander_key] = not is_expanded
-                st.rerun()
-            
-            # Content (only show if expanded)
-            if is_expanded:
-                st.markdown(f"""
-                <div class="collapsible-content">
-                    <p><strong>ID:</strong> {cred['id']}</p>
-                    <p><strong>Created:</strong> {format_timestamp(cred['created_at'])}</p>
-                </div>
-                """, unsafe_allow_html=True)
+            with st.expander(f"🔐 {cred['supplier']} ({cred['environment']})", expanded=False):
+                st.write(f"**ID:** {cred['id']}")
+                st.write(f"**Created:** {format_timestamp(cred['created_at'])}")
                 
                 # View button (always available)
                 if st.button(f"👁️ View Details", key=f"view_{cred['id']}"):

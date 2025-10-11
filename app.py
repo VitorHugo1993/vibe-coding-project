@@ -1589,7 +1589,7 @@ def create_credential_tab():
         # Aligned buttons
         st.subheader("🎯 Actions")
         
-        button_col1, button_col2 = st.columns(2)
+        button_col1, button_col2, button_col3 = st.columns(3)
         
         with button_col1:
             # Preview button
@@ -1632,21 +1632,17 @@ def create_credential_tab():
                         st.rerun()
                     else:
                         st.error("❌ Failed to create credential. Please check the logs for details.")
+        
+        with button_col3:
+            # Clear Form button
+            if st.form_submit_button("🧹 Clear Form", type="primary"):
+                # Clear all form-related session state
+                keys_to_clear = [key for key in st.session_state.keys() if key.startswith('create_')]
+                for key in keys_to_clear:
+                    del st.session_state[key]
+                st.success("✅ Form cleared successfully!")
+                st.rerun()
     
-    # Clear Form button outside the form
-    st.markdown("---")
-    st.subheader("🧹 Form Management")
-    
-    col1, col2, col3 = st.columns([1, 1, 1])
-    
-    with col2:
-        if st.button("🧹 Clear Form", type="primary", help="Clear all form fields"):
-            # Clear all form-related session state
-            keys_to_clear = [key for key in st.session_state.keys() if key.startswith('create_')]
-            for key in keys_to_clear:
-                del st.session_state[key]
-            st.success("✅ Form cleared successfully!")
-            st.rerun()
 
 def audit_logs_tab():
     """Audit logs tab"""

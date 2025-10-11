@@ -11,6 +11,14 @@ import csv
 import os
 import base64
 
+# Database imports
+try:
+    from sqlalchemy import create_engine, text
+    from sqlalchemy.exc import SQLAlchemyError
+    SQLALCHEMY_AVAILABLE = True
+except ImportError:
+    SQLALCHEMY_AVAILABLE = False
+
 # Page configuration
 st.set_page_config(
     page_title="API Credential Management",
@@ -554,9 +562,22 @@ st.markdown("""
 
 # Database setup and initialization
 class DatabaseManager:
-    def __init__(self, db_path: str = "credentials.db"):
+    def __init__(self, db_path: str = "credentials.db", use_postgres: bool = False, postgres_url: str = None):
         self.db_path = db_path
-        self.init_database()
+        self.use_postgres = use_postgres
+        self.postgres_url = postgres_url
+        self.engine = None
+        
+        if use_postgres and SQLALCHEMY_AVAILABLE and postgres_url:
+            try:
+                self.engine = create_engine(postgres_url)
+                self.init_postgres_database()
+            except Exception as e:
+                st.warning(f"Failed to connect to PostgreSQL: {e}. Falling back to SQLite.")
+                self.use_postgres = False
+                self.init_database()
+        else:
+            self.init_database()
     
     def init_database(self):
         """Initialize the SQLite database with required tables"""
@@ -596,6 +617,47 @@ class DatabaseManager:
         
         # Seed sample data if tables are empty
         self._seed_sample_data()
+    
+    def init_postgres_database(self):
+        """Initialize PostgreSQL database with required tables"""
+        try:
+            with self.engine.connect() as conn:
+                # Create credentials table
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS credentials (
+                        id SERIAL PRIMARY KEY,
+                        supplier TEXT NOT NULL,
+                        environment TEXT NOT NULL,
+                        auth_type TEXT NOT NULL,
+                        data TEXT NOT NULL,
+                        created_by TEXT NOT NULL,
+                        created_at TIMESTAMP NOT NULL,
+                        updated_at TIMESTAMP NOT NULL,
+                        allow_self_rotation BOOLEAN DEFAULT FALSE
+                    )
+                """))
+                
+                # Create audit_logs table
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS audit_logs (
+                        id SERIAL PRIMARY KEY,
+                        cred_id INTEGER,
+                        action TEXT NOT NULL,
+                        actor TEXT NOT NULL,
+                        details TEXT NOT NULL,
+                        timestamp TIMESTAMP NOT NULL,
+                        FOREIGN KEY (cred_id) REFERENCES credentials (id)
+                    )
+                """))
+                
+                conn.commit()
+            
+            # Seed sample data if tables are empty
+            self._seed_postgres_sample_data()
+            
+        except Exception as e:
+            st.error(f"Error initializing PostgreSQL database: {e}")
+            raise
     
     def _seed_sample_data(self):
         """Seed the database with sample credentials if empty"""
@@ -664,12 +726,100 @@ class DatabaseManager:
                     now
                 ))
             
-            conn.commit()
-        
-        conn.close()
+                conn.commit()
+            
+            conn.close()
+    
+    def _seed_postgres_sample_data(self):
+        """Seed PostgreSQL database with sample credentials if empty"""
+        try:
+            with self.engine.connect() as conn:
+                # Check if credentials table is empty
+                result = conn.execute(text("SELECT COUNT(*) FROM credentials"))
+                count = result.scalar()
+                
+                if count == 0:
+                    sample_credentials = [
+                        {
+                            "supplier": "SupplierA",
+                            "environment": "production",
+                            "auth_type": "api_key",
+                            "data": json.dumps({"api_key": "ak_prod_123456789"}),
+                            "created_by": "alice@nezasa.com",
+                            "allow_self_rotation": True
+                        },
+                        {
+                            "supplier": "SupplierB",
+                            "environment": "sandbox",
+                            "auth_type": "username_password",
+                            "data": json.dumps({"username": "sandbox_user", "password": "sandbox_pass_2024"}),
+                            "created_by": "bob@devops.nezasa.com",
+                            "allow_self_rotation": False
+                        },
+                        {
+                            "supplier": "SupplierC",
+                            "environment": "production",
+                            "auth_type": "api_key",
+                            "data": json.dumps({"api_key": "ak_prod_987654321"}),
+                            "created_by": "carol@cs.nezasa.com",
+                            "allow_self_rotation": True
+                        }
+                    ]
+                    
+                    now = datetime.datetime.now()
+                    
+                    for cred in sample_credentials:
+                        # Insert credential
+                        conn.execute(text("""
+                            INSERT INTO credentials (supplier, environment, auth_type, data, created_by, created_at, updated_at, allow_self_rotation)
+                            VALUES (:supplier, :environment, :auth_type, :data, :created_by, :created_at, :updated_at, :allow_self_rotation)
+                        """), {
+                            "supplier": cred["supplier"],
+                            "environment": cred["environment"],
+                            "auth_type": cred["auth_type"],
+                            "data": cred["data"],
+                            "created_by": cred["created_by"],
+                            "created_at": now,
+                            "updated_at": now,
+                            "allow_self_rotation": cred["allow_self_rotation"]
+                        })
+                        
+                        # Log the creation
+                        conn.execute(text("""
+                            INSERT INTO audit_logs (cred_id, action, actor, details, timestamp)
+                            VALUES (LASTVAL(), :action, :actor, :details, :timestamp)
+                        """), {
+                            "action": "create",
+                            "actor": cred["created_by"],
+                            "details": f"Created credential for {cred['supplier']} ({cred['environment']})",
+                            "timestamp": now
+                        })
+                    
+                    conn.commit()
+                    
+        except Exception as e:
+            st.error(f"Error seeding PostgreSQL database: {e}")
+            raise
 
 # Initialize database
-db = DatabaseManager()
+try:
+    from database_config import get_database_config
+    config = get_database_config()
+    
+    if config["use_postgres"]:
+        db = DatabaseManager(
+            use_postgres=True,
+            postgres_url=config["postgres_url"]
+        )
+        st.success("🔗 Connected to PostgreSQL database")
+    else:
+        db = DatabaseManager(db_path=config["sqlite_path"])
+        st.info("💾 Using SQLite database (data will persist)")
+        
+except ImportError:
+    # Fallback to default SQLite if config file not found
+    db = DatabaseManager()
+    st.info("💾 Using SQLite database (default)")
 
 # Role-based access control
 class RBACManager:

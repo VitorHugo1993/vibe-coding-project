@@ -402,14 +402,14 @@ st.markdown("""
     
     /* Expander header hover state */
     .streamlit-expanderHeader:hover {
-        background-color: #f8f9fa !important;
-        color: black !important;
+        background-color: #dc3545 !important;
+        color: white !important;
     }
     
     /* Expander header selected/active state */
     .streamlit-expanderHeader[aria-expanded="true"] {
-        background-color: #f8f9fa !important;
-        color: black !important;
+        background-color: #dc3545 !important;
+        color: white !important;
     }
     
     /* Expander content */

@@ -8,6 +8,8 @@ from typing import Dict, List, Optional, Any
 import pandas as pd
 import io
 import csv
+import os
+import base64
 
 # Page configuration
 st.set_page_config(
@@ -736,6 +738,29 @@ class CredentialManager:
 cred_manager = CredentialManager(db)
 
 # Utility functions
+def load_logo_image():
+    """Load the Nezasa logo image if it exists"""
+    logo_paths = ["nezasa_logo.png", "nezasa_logo.jpg", "nezasa_logo.svg", "logo.png", "logo.jpg"]
+    
+    for logo_path in logo_paths:
+        if os.path.exists(logo_path):
+            try:
+                with open(logo_path, "rb") as f:
+                    image_data = f.read()
+                    base64_image = base64.b64encode(image_data).decode()
+                    
+                    if logo_path.endswith('.svg'):
+                        return f"data:image/svg+xml;base64,{base64_image}"
+                    elif logo_path.endswith('.png'):
+                        return f"data:image/png;base64,{base64_image}"
+                    elif logo_path.endswith('.jpg'):
+                        return f"data:image/jpeg;base64,{base64_image}"
+            except Exception as e:
+                print(f"Error loading logo: {e}")
+                continue
+    
+    return None
+
 def mask_secret_data(data: Dict, auth_type: str) -> Dict:
     """Mask secret data for non-admin users"""
     masked_data = {}
@@ -762,29 +787,22 @@ def format_timestamp(timestamp_str: str) -> str:
 # Streamlit UI
 def main():
     # Add Nezasa logo in top-left corner
-    # Create a container for the logo using Streamlit's columns
-    col1, col2, col3 = st.columns([1, 4, 1])
+    logo_data = load_logo_image()
     
-    with col1:
-        # Try to load the Nezasa logo image
-        try:
-            # Check if logo file exists
-            import os
-            logo_paths = ["nezasa_logo.png", "nezasa_logo.jpg", "nezasa_logo.svg", "logo.png", "logo.jpg"]
-            logo_found = False
-            
-            for logo_path in logo_paths:
-                if os.path.exists(logo_path):
-                    st.image(logo_path, width=120)
-                    logo_found = True
-                    break
-            
-            if not logo_found:
-                # Fallback to text logo if image not found
-                st.markdown('<div style="color: #dc3545; font-weight: bold; font-size: 1.2rem; text-align: left;">NEZASA</div>', unsafe_allow_html=True)
-        except:
-            # Fallback to text logo
-            st.markdown('<div style="color: #dc3545; font-weight: bold; font-size: 1.2rem; text-align: left;">NEZASA</div>', unsafe_allow_html=True)
+    if logo_data:
+        # Display actual logo image
+        st.markdown(f"""
+        <div style="position: fixed; top: 10px; left: 10px; z-index: 999; background-color: white; padding: 8px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <img src="{logo_data}" style="height: 32px; width: auto; max-width: 120px;" alt="Nezasa Logo">
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        # Fallback to text logo
+        st.markdown("""
+        <div style="position: fixed; top: 10px; left: 10px; z-index: 999; background-color: white; padding: 8px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="color: #dc3545; font-weight: bold; font-size: 1.2rem;">NEZASA</div>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Header
     st.markdown('<h1 class="main-header">🔐 Nezasa Connect API Credential Management – POC</h1>', unsafe_allow_html=True)

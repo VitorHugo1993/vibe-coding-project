@@ -1622,19 +1622,19 @@ def create_credential_tab():
                 elif not credential_data:
                     st.error("❌ Authentication data is required")
                 else:
-                # Create the credential
-                if cred_manager.create_credential(supplier, environment, auth_type, credential_data, created_by):
-                    st.success("🎉 **Credential created successfully!**")
-                    st.balloons()
-                    st.info("The credential has been saved to the database and logged in the audit trail.")
-                    # Store success message in session state to persist
-                    st.session_state.show_creation_success = True
-                    # Small delay before rerun to show messages
-                    import time
-                    time.sleep(1)
-                    st.rerun()
-                else:
-                    st.error("❌ Failed to create credential. Please check the logs for details.")
+                    # Create the credential
+                    if cred_manager.create_credential(supplier, environment, auth_type, credential_data, created_by):
+                        st.success("🎉 **Credential created successfully!**")
+                        st.balloons()
+                        st.info("The credential has been saved to the database and logged in the audit trail.")
+                        # Store success message in session state to persist
+                        st.session_state.show_creation_success = True
+                        # Small delay before rerun to show messages
+                        import time
+                        time.sleep(1)
+                        st.rerun()
+                    else:
+                        st.error("❌ Failed to create credential. Please check the logs for details.")
 
 def audit_logs_tab():
     """Audit logs tab"""

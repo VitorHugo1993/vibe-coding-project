@@ -476,6 +476,33 @@ st.markdown("""
         color: white !important;
     }
     
+    /* Nuclear option - target all possible expander elements */
+    [data-testid="streamlit-expanderHeader"],
+    [data-testid="streamlit-expanderHeader"]:hover,
+    [data-testid="streamlit-expanderHeader"][aria-expanded="true"],
+    .streamlit-expanderHeader,
+    .streamlit-expanderHeader:hover,
+    .streamlit-expanderHeader[aria-expanded="true"],
+    .streamlit-expanderHeader button,
+    .streamlit-expanderHeader button:hover,
+    .streamlit-expanderHeader div,
+    .streamlit-expanderHeader div:hover {
+        background-color: #dc3545 !important;
+        color: white !important;
+        background: #dc3545 !important;
+    }
+    
+    /* Force override with maximum specificity */
+    .main .block-container .streamlit-expanderHeader {
+        background-color: #dc3545 !important;
+        color: white !important;
+    }
+    
+    .main .block-container .streamlit-expanderHeader:hover {
+        background-color: #c82333 !important;
+        color: white !important;
+    }
+    
     /* Customize entire sidebar with darker red background */
     .stSidebar {
         background-color: #dc3545 !important;

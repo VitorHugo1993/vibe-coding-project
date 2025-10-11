@@ -812,7 +812,7 @@ def main():
     st.sidebar.title("🔑 Role Management")
     selected_role = st.sidebar.selectbox(
         "Select Role:",
-        ["ADMIN", "DEVOPS", "CS", "PARTNER"],
+        ["admin", "devops", "cs", "partner"],
         help="Choose a role to simulate different access levels"
     )
     

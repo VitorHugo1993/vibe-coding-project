@@ -806,7 +806,7 @@ def main():
         """, unsafe_allow_html=True)
     
     # Header
-    st.markdown('<h1 class="main-header">🔐 Nezasa Connect API Credential Management – POC</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">🔐 API Credential Management</h1>', unsafe_allow_html=True)
     
     # Role selector in sidebar
     st.sidebar.title("🔑 Role Management")

@@ -216,6 +216,52 @@ st.markdown("""
         color: black !important;
     }
     
+    /* Customize placeholder text color */
+    .stTextInput input::placeholder {
+        color: #666666 !important;
+        opacity: 1 !important;
+    }
+    
+    .stTextInput input::-webkit-input-placeholder {
+        color: #666666 !important;
+        opacity: 1 !important;
+    }
+    
+    .stTextInput input::-moz-placeholder {
+        color: #666666 !important;
+        opacity: 1 !important;
+    }
+    
+    .stTextInput input:-ms-input-placeholder {
+        color: #666666 !important;
+        opacity: 1 !important;
+    }
+    
+    /* Placeholder styling for all input types */
+    input::placeholder,
+    textarea::placeholder {
+        color: #666666 !important;
+        opacity: 1 !important;
+    }
+    
+    input::-webkit-input-placeholder,
+    textarea::-webkit-input-placeholder {
+        color: #666666 !important;
+        opacity: 1 !important;
+    }
+    
+    input::-moz-placeholder,
+    textarea::-moz-placeholder {
+        color: #666666 !important;
+        opacity: 1 !important;
+    }
+    
+    input:-ms-input-placeholder,
+    textarea:-ms-input-placeholder {
+        color: #666666 !important;
+        opacity: 1 !important;
+    }
+    
     /* Make sure the main content area has white background */
     .stApp {
         background-color: white;

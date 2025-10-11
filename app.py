@@ -1489,6 +1489,14 @@ def create_credential_tab():
             st.write(f"{status} {perm.replace('_', ' ').title()}")
         return
     
+    # Clear form data if flag is set
+    if st.session_state.get('clear_form_data', False):
+        # Clear all form-related session state
+        keys_to_clear = [key for key in st.session_state.keys() if key.startswith('create_')]
+        for key in keys_to_clear:
+            del st.session_state[key]
+        st.session_state.clear_form_data = False
+
     with st.form("create_credential_form"):
         st.subheader("📝 Credential Information")
         
@@ -1498,19 +1506,22 @@ def create_credential_tab():
             supplier = st.text_input(
                 "Supplier Name:",
                 placeholder="e.g., Expedia, Booking.com",
-                help="Name of the API supplier"
+                help="Name of the API supplier",
+                key="create_supplier"
             )
             environment = st.selectbox(
                 "Environment:",
                 ["production", "sandbox", "staging", "development"],
-                help="Target environment for the credential"
+                help="Target environment for the credential",
+                key="create_environment"
             )
         
         with col2:
             auth_type = st.selectbox(
                 "Authentication Type:",
                 ["api_key", "username_password"],
-                help="Type of authentication required"
+                help="Type of authentication required",
+                key="create_auth_type"
             )
             created_by = st.text_input(
                 "Created By:",
@@ -1622,13 +1633,16 @@ def create_credential_tab():
                     # Create the credential
                     if cred_manager.create_credential(supplier, environment, auth_type, credential_data, created_by):
                         st.success("🎉 **Credential created successfully!**")
-                        # Clear input fields by clearing session state
+                        # Clear all input fields by clearing session state
+                        # Clear authentication data fields
                         if 'create_api_key' in st.session_state:
                             del st.session_state['create_api_key']
                         if 'create_username' in st.session_state:
                             del st.session_state['create_username']
                         if 'create_password' in st.session_state:
                             del st.session_state['create_password']
+                        # Clear form data by triggering form reset
+                        st.session_state.clear_form_data = True
                         # Clear the flag to prevent persistent messages
                         st.session_state.show_creation_success = False
                         # Add a small delay to keep success message visible longer

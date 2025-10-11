@@ -64,6 +64,46 @@ st.markdown("""
         color: white !important;
     }
     
+    /* Force all primary buttons to be red */
+    button[kind="primary"] {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: white !important;
+    }
+    
+    button[kind="primary"]:hover {
+        background-color: #c82333 !important;
+        border-color: #bd2130 !important;
+        color: white !important;
+    }
+    
+    /* Override Streamlit's default primary button colors */
+    .stButton button[kind="primary"] {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: white !important;
+        box-shadow: none !important;
+    }
+    
+    .stButton button[kind="primary"]:hover {
+        background-color: #c82333 !important;
+        border-color: #bd2130 !important;
+        color: white !important;
+    }
+    
+    /* Additional override for form primary buttons */
+    .stForm button[kind="primary"] {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: white !important;
+    }
+    
+    .stForm button[kind="primary"]:hover {
+        background-color: #c82333 !important;
+        border-color: #bd2130 !important;
+        color: white !important;
+    }
+    
     /* Secondary buttons */
     .stButton > button[kind="secondary"] {
         background-color: #6c757d !important;

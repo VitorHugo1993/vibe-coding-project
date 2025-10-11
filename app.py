@@ -321,6 +321,18 @@ st.markdown("""
         color: black !important;
     }
     
+    /* Selectbox dropdown arrow */
+    .stSelectbox svg {
+        fill: black !important;
+        color: black !important;
+    }
+    
+    /* Selectbox button arrow */
+    .stSelectbox button svg {
+        fill: black !important;
+        stroke: black !important;
+    }
+    
     /* Ensure all form input text is black */
     .stForm input, .stForm textarea, .stForm select {
         color: black !important;

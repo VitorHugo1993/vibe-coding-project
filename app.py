@@ -786,21 +786,22 @@ def format_timestamp(timestamp_str: str) -> str:
 
 # Streamlit UI
 def main():
-    # Add Nezasa logo in top-left corner
+    # Add Nezasa logo above the page title
     logo_data = load_logo_image()
     
+    # Create a container for the logo and title
     if logo_data:
         # Display actual logo image
         st.markdown(f"""
-        <div style="position: fixed; top: 10px; left: 10px; z-index: 999; background-color: white; padding: 8px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <img src="{logo_data}" style="height: 32px; width: auto; max-width: 120px;" alt="Nezasa Logo">
+        <div style="text-align: left; margin-bottom: 1rem;">
+            <img src="{logo_data}" style="height: 40px; width: auto; max-width: 150px;" alt="Nezasa Logo">
         </div>
         """, unsafe_allow_html=True)
     else:
         # Fallback to text logo
         st.markdown("""
-        <div style="position: fixed; top: 10px; left: 10px; z-index: 999; background-color: white; padding: 8px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <div style="color: #dc3545; font-weight: bold; font-size: 1.2rem;">NEZASA</div>
+        <div style="text-align: left; margin-bottom: 1rem;">
+            <div style="color: #dc3545; font-weight: bold; font-size: 1.5rem;">NEZASA</div>
         </div>
         """, unsafe_allow_html=True)
     

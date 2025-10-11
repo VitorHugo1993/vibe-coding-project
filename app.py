@@ -1,40 +1,922 @@
 import streamlit as st
+import sqlite3
+import json
+import datetime
+import uuid
+import hashlib
+from typing import Dict, List, Optional, Any
+import pandas as pd
+import io
+import csv
 
-# Set page config
+# Page configuration
 st.set_page_config(
-    page_title="Hello World App",
-    page_icon="👋",
-    layout="centered"
+    page_title="Nezasa Connect API Credential Management",
+    page_icon="🔐",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Main content
-st.title("👋 Hello World!")
-st.markdown("Welcome to your first Streamlit app!")
-
-# Add some interactive elements
-st.header("Interactive Demo")
-name = st.text_input("What's your name?", placeholder="Enter your name here")
-
-if name:
-    st.success(f"Hello, {name}! 👋")
-else:
-    st.info("Please enter your name above to see a personalized greeting!")
-
-# Add some additional content
-st.header("About This App")
+# Custom CSS for better styling
 st.markdown("""
-This is a simple Streamlit application that demonstrates:
-- Basic Streamlit components
-- User input handling
-- Dynamic content updates
-- Clean, modern UI
+<style>
+    .main-header {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #1f77b4;
+        text-align: center;
+        margin-bottom: 2rem;
+        border-bottom: 3px solid #1f77b4;
+        padding-bottom: 1rem;
+    }
+    .role-badge {
+        background-color: #e1f5fe;
+        color: #0277bd;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        font-weight: bold;
+        display: inline-block;
+        margin-left: 1rem;
+    }
+    .credential-card {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border-left: 4px solid #1f77b4;
+        margin: 0.5rem 0;
+    }
+    .success-message {
+        background-color: #d4edda;
+        color: #155724;
+        padding: 0.75rem;
+        border-radius: 0.25rem;
+        border: 1px solid #c3e6cb;
+        margin: 1rem 0;
+    }
+    .error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 0.75rem;
+        border-radius: 0.25rem;
+        border: 1px solid #f5c6cb;
+        margin: 1rem 0;
+    }
+    .warning-message {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 0.75rem;
+        border-radius: 0.25rem;
+        border: 1px solid #ffeaa7;
+        margin: 1rem 0;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-**Enjoy exploring Streamlit!** 🚀
-""")
+# Database setup and initialization
+class DatabaseManager:
+    def __init__(self, db_path: str = "credentials.db"):
+        self.db_path = db_path
+        self.init_database()
+    
+    def init_database(self):
+        """Initialize the SQLite database with required tables"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Create credentials table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS credentials (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                supplier TEXT NOT NULL,
+                environment TEXT NOT NULL,
+                auth_type TEXT NOT NULL,
+                data TEXT NOT NULL,
+                created_by TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                allow_self_rotation BOOLEAN DEFAULT FALSE
+            )
+        """)
+        
+        # Create audit_logs table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS audit_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cred_id INTEGER,
+                action TEXT NOT NULL,
+                actor TEXT NOT NULL,
+                details TEXT NOT NULL,
+                timestamp TEXT NOT NULL,
+                FOREIGN KEY (cred_id) REFERENCES credentials (id)
+            )
+        """)
+        
+        conn.commit()
+        conn.close()
+        
+        # Seed sample data if tables are empty
+        self._seed_sample_data()
+    
+    def _seed_sample_data(self):
+        """Seed the database with sample credentials if empty"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Check if credentials table is empty
+        cursor.execute("SELECT COUNT(*) FROM credentials")
+        count = cursor.fetchone()[0]
+        
+        if count == 0:
+            sample_credentials = [
+                {
+                    "supplier": "SupplierA",
+                    "environment": "production",
+                    "auth_type": "api_key",
+                    "data": json.dumps({"api_key": "ak_prod_123456789"}),
+                    "created_by": "alice@nezasa.com",
+                    "allow_self_rotation": True
+                },
+                {
+                    "supplier": "SupplierB",
+                    "environment": "sandbox",
+                    "auth_type": "username_password",
+                    "data": json.dumps({"username": "sandbox_user", "password": "sandbox_pass_2024"}),
+                    "created_by": "bob@devops.nezasa.com",
+                    "allow_self_rotation": False
+                },
+                {
+                    "supplier": "SupplierC",
+                    "environment": "production",
+                    "auth_type": "api_key",
+                    "data": json.dumps({"api_key": "ak_prod_987654321"}),
+                    "created_by": "carol@cs.nezasa.com",
+                    "allow_self_rotation": True
+                }
+            ]
+            
+            now = datetime.datetime.now().isoformat()
+            
+            for cred in sample_credentials:
+                cursor.execute("""
+                    INSERT INTO credentials (supplier, environment, auth_type, data, created_by, created_at, updated_at, allow_self_rotation)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    cred["supplier"],
+                    cred["environment"],
+                    cred["auth_type"],
+                    cred["data"],
+                    cred["created_by"],
+                    now,
+                    now,
+                    cred["allow_self_rotation"]
+                ))
+                
+                # Log the creation
+                cred_id = cursor.lastrowid
+                cursor.execute("""
+                    INSERT INTO audit_logs (cred_id, action, actor, details, timestamp)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (
+                    cred_id,
+                    "create",
+                    cred["created_by"],
+                    f"Created credential for {cred['supplier']} ({cred['environment']})",
+                    now
+                ))
+            
+            conn.commit()
+        
+        conn.close()
 
-# Sidebar
-st.sidebar.title("Navigation")
-st.sidebar.markdown("This is your first Streamlit app!")
-st.sidebar.markdown("---")
-st.sidebar.markdown("Built with ❤️ using Streamlit")
+# Initialize database
+db = DatabaseManager()
 
+# Role-based access control
+class RBACManager:
+    ROLES = {
+        "admin": {
+            "can_create": True,
+            "can_update": True,
+            "can_rotate": True,
+            "can_view_unmasked": True,
+            "can_view_audit": True,
+            "description": "Full access to all operations"
+        },
+        "devops": {
+            "can_create": False,
+            "can_update": True,
+            "can_rotate": False,
+            "can_view_unmasked": True,
+            "can_view_audit": True,
+            "description": "Can update credentials and view audit logs"
+        },
+        "cs": {
+            "can_create": False,
+            "can_update": False,
+            "can_rotate": False,
+            "can_view_unmasked": False,
+            "can_view_audit": False,
+            "description": "Can only view masked credentials"
+        },
+        "partner": {
+            "can_create": False,
+            "can_update": False,
+            "can_rotate": "conditional",  # Only if allow_self_rotation is True
+            "can_view_unmasked": False,
+            "can_view_audit": False,
+            "description": "Limited access, can rotate if allowed"
+        }
+    }
+    
+    @classmethod
+    def has_permission(cls, role: str, action: str, credential_data: Optional[Dict] = None) -> bool:
+        """Check if a role has permission for a specific action"""
+        if role not in cls.ROLES:
+            return False
+        
+        role_permissions = cls.ROLES[role]
+        
+        if action == "create":
+            return role_permissions["can_create"]
+        elif action == "update":
+            return role_permissions["can_update"]
+        elif action == "rotate":
+            if role_permissions["can_rotate"] == "conditional":
+                return credential_data and credential_data.get("allow_self_rotation", False)
+            return role_permissions["can_rotate"]
+        elif action == "view_unmasked":
+            return role_permissions["can_view_unmasked"]
+        elif action == "view_audit":
+            return role_permissions["can_view_audit"]
+        
+        return False
+
+# Credential management functions
+class CredentialManager:
+    def __init__(self, db_manager: DatabaseManager):
+        self.db = db_manager
+    
+    def get_all_credentials(self) -> List[Dict]:
+        """Retrieve all credentials from the database"""
+        conn = sqlite3.connect(self.db.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT id, supplier, environment, auth_type, data, created_by, 
+                   created_at, updated_at, allow_self_rotation
+            FROM credentials
+            ORDER BY updated_at DESC
+        """)
+        
+        credentials = []
+        for row in cursor.fetchall():
+            credentials.append({
+                "id": row[0],
+                "supplier": row[1],
+                "environment": row[2],
+                "auth_type": row[3],
+                "data": json.loads(row[4]),
+                "created_by": row[5],
+                "created_at": row[6],
+                "updated_at": row[7],
+                "allow_self_rotation": bool(row[8])
+            })
+        
+        conn.close()
+        return credentials
+    
+    def get_credential_by_id(self, cred_id: int) -> Optional[Dict]:
+        """Retrieve a specific credential by ID"""
+        conn = sqlite3.connect(self.db.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT id, supplier, environment, auth_type, data, created_by, 
+                   created_at, updated_at, allow_self_rotation
+            FROM credentials
+            WHERE id = ?
+        """, (cred_id,))
+        
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row:
+            return {
+                "id": row[0],
+                "supplier": row[1],
+                "environment": row[2],
+                "auth_type": row[3],
+                "data": json.loads(row[4]),
+                "created_by": row[5],
+                "created_at": row[6],
+                "updated_at": row[7],
+                "allow_self_rotation": bool(row[8])
+            }
+        return None
+    
+    def create_credential(self, supplier: str, environment: str, auth_type: str, 
+                         data: Dict, created_by: str) -> bool:
+        """Create a new credential"""
+        try:
+            conn = sqlite3.connect(self.db.db_path)
+            cursor = conn.cursor()
+            
+            now = datetime.datetime.now().isoformat()
+            
+            cursor.execute("""
+                INSERT INTO credentials (supplier, environment, auth_type, data, created_by, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (supplier, environment, auth_type, json.dumps(data), created_by, now, now))
+            
+            cred_id = cursor.lastrowid
+            
+            # Log the creation
+            cursor.execute("""
+                INSERT INTO audit_logs (cred_id, action, actor, details, timestamp)
+                VALUES (?, ?, ?, ?, ?)
+            """, (cred_id, "create", created_by, f"Created credential for {supplier} ({environment})", now))
+            
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            st.error(f"Error creating credential: {str(e)}")
+            return False
+    
+    def update_credential(self, cred_id: int, auth_type: str, data: Dict, updated_by: str) -> bool:
+        """Update an existing credential"""
+        try:
+            conn = sqlite3.connect(self.db.db_path)
+            cursor = conn.cursor()
+            
+            now = datetime.datetime.now().isoformat()
+            
+            cursor.execute("""
+                UPDATE credentials 
+                SET auth_type = ?, data = ?, updated_at = ?
+                WHERE id = ?
+            """, (auth_type, json.dumps(data), now, cred_id))
+            
+            # Log the update
+            cursor.execute("""
+                INSERT INTO audit_logs (cred_id, action, actor, details, timestamp)
+                VALUES (?, ?, ?, ?, ?)
+            """, (cred_id, "update", updated_by, f"Updated credential data for ID {cred_id}", now))
+            
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            st.error(f"Error updating credential: {str(e)}")
+            return False
+    
+    def rotate_credential(self, cred_id: int, rotated_by: str) -> bool:
+        """Rotate a credential by generating new secret values"""
+        try:
+            credential = self.get_credential_by_id(cred_id)
+            if not credential:
+                return False
+            
+            # Generate new secret based on auth_type
+            new_data = {}
+            timestamp = datetime.datetime.now().strftime("%Y%m%d")
+            
+            if credential["auth_type"] == "api_key":
+                new_data["api_key"] = f"ak_{credential['environment']}_{timestamp}_{str(uuid.uuid4())[:8]}"
+            elif credential["auth_type"] == "username_password":
+                new_data["username"] = credential["data"].get("username", "user")
+                new_data["password"] = f"pass_{timestamp}_{str(uuid.uuid4())[:8]}"
+            
+            # Update the credential
+            success = self.update_credential(cred_id, credential["auth_type"], new_data, rotated_by)
+            
+            if success:
+                # Log the rotation specifically
+                conn = sqlite3.connect(self.db.db_path)
+                cursor = conn.cursor()
+                
+                cursor.execute("""
+                    INSERT INTO audit_logs (cred_id, action, actor, details, timestamp)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (cred_id, "rotate", rotated_by, f"Rotated credential secrets for {credential['supplier']}", datetime.datetime.now().isoformat()))
+                
+                conn.commit()
+                conn.close()
+            
+            return success
+        except Exception as e:
+            st.error(f"Error rotating credential: {str(e)}")
+            return False
+    
+    def get_audit_logs(self, cred_id: Optional[int] = None) -> List[Dict]:
+        """Retrieve audit logs, optionally filtered by credential ID"""
+        conn = sqlite3.connect(self.db.db_path)
+        cursor = conn.cursor()
+        
+        if cred_id:
+            cursor.execute("""
+                SELECT al.id, al.cred_id, al.action, al.actor, al.details, al.timestamp,
+                       c.supplier
+                FROM audit_logs al
+                LEFT JOIN credentials c ON al.cred_id = c.id
+                WHERE al.cred_id = ?
+                ORDER BY al.timestamp DESC
+            """, (cred_id,))
+        else:
+            cursor.execute("""
+                SELECT al.id, al.cred_id, al.action, al.actor, al.details, al.timestamp,
+                       c.supplier
+                FROM audit_logs al
+                LEFT JOIN credentials c ON al.cred_id = c.id
+                ORDER BY al.timestamp DESC
+            """)
+        
+        logs = []
+        for row in cursor.fetchall():
+            logs.append({
+                "id": row[0],
+                "cred_id": row[1],
+                "action": row[2],
+                "actor": row[3],
+                "details": row[4],
+                "timestamp": row[5],
+                "supplier": row[6] if row[6] else "System"
+            })
+        
+        conn.close()
+        return logs
+
+# Initialize credential manager
+cred_manager = CredentialManager(db)
+
+# Utility functions
+def mask_secret_data(data: Dict, auth_type: str) -> Dict:
+    """Mask secret data for non-admin users"""
+    masked_data = {}
+    
+    if auth_type == "api_key":
+        api_key = data.get("api_key", "")
+        masked_data["api_key"] = "*****" + api_key[-4:] if len(api_key) > 4 else "*****"
+    elif auth_type == "username_password":
+        username = data.get("username", "")
+        password = data.get("password", "")
+        masked_data["username"] = username  # Username can be shown
+        masked_data["password"] = "*****" + password[-4:] if len(password) > 4 else "*****"
+    
+    return masked_data
+
+def format_timestamp(timestamp_str: str) -> str:
+    """Format timestamp for display"""
+    try:
+        dt = datetime.datetime.fromisoformat(timestamp_str)
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except:
+        return timestamp_str
+
+# Streamlit UI
+def main():
+    # Header
+    st.markdown('<h1 class="main-header">🔐 Nezasa Connect API Credential Management – POC</h1>', unsafe_allow_html=True)
+    
+    # Role selector in sidebar
+    st.sidebar.title("🔑 Role Management")
+    selected_role = st.sidebar.selectbox(
+        "Select Role:",
+        ["admin", "devops", "cs", "partner"],
+        help="Choose a role to simulate different access levels"
+    )
+    
+    # Display role info
+    role_info = RBACManager.ROLES[selected_role]
+    st.sidebar.markdown(f'<span class="role-badge">{selected_role.upper()}</span>', unsafe_allow_html=True)
+    st.sidebar.info(f"**{selected_role.title()}**: {role_info['description']}")
+    
+    # Store role in session state
+    st.session_state.current_role = selected_role
+    
+    # Main tabs
+    tab1, tab2, tab3 = st.tabs(["📊 Dashboard", "➕ Create Credential", "📋 Audit Logs"])
+    
+    with tab1:
+        dashboard_tab()
+    
+    with tab2:
+        create_credential_tab()
+    
+    with tab3:
+        audit_logs_tab()
+
+def dashboard_tab():
+    """Dashboard tab with credential table and management actions"""
+    st.header("📊 Credential Dashboard")
+    
+    # Get all credentials
+    credentials = cred_manager.get_all_credentials()
+    
+    if not credentials:
+        st.info("No credentials found. Create your first credential using the 'Create Credential' tab.")
+        return
+    
+    # Display credentials in a table
+    st.subheader(f"Found {len(credentials)} credentials")
+    
+    # Create a dataframe for display
+    display_data = []
+    for cred in credentials:
+        # Mask data for non-admin users
+        if RBACManager.has_permission(st.session_state.current_role, "view_unmasked"):
+            display_data_dict = cred["data"]
+        else:
+            display_data_dict = mask_secret_data(cred["data"], cred["auth_type"])
+        
+        display_data.append({
+            "ID": cred["id"],
+            "Supplier": cred["supplier"],
+            "Environment": cred["environment"],
+            "Auth Type": cred["auth_type"],
+            "Data": json.dumps(display_data_dict, indent=2),
+            "Created By": cred["created_by"],
+            "Updated At": format_timestamp(cred["updated_at"]),
+            "Actions": cred["id"]  # Store ID for action buttons
+        })
+    
+    df = pd.DataFrame(display_data)
+    
+    # Display the table
+    st.dataframe(
+        df.drop("Actions", axis=1),
+        use_container_width=True,
+        hide_index=True
+    )
+    
+    # Action buttons for each credential
+    st.subheader("🔧 Credential Actions")
+    
+    cols = st.columns(min(len(credentials), 3))
+    for i, cred in enumerate(credentials):
+        with cols[i % 3]:
+            with st.expander(f"🔐 {cred['supplier']} ({cred['environment']})", expanded=False):
+                st.write(f"**ID:** {cred['id']}")
+                st.write(f"**Created:** {format_timestamp(cred['created_at'])}")
+                
+                # View button (always available)
+                if st.button(f"👁️ View Details", key=f"view_{cred['id']}"):
+                    view_credential_details(cred)
+                
+                # Update button (admin, devops)
+                if RBACManager.has_permission(st.session_state.current_role, "update"):
+                    if st.button(f"✏️ Update", key=f"update_{cred['id']}"):
+                        st.session_state[f"show_update_form_{cred['id']}"] = True
+                
+                # Rotate button (admin, partner if allowed)
+                can_rotate = RBACManager.has_permission(
+                    st.session_state.current_role, 
+                    "rotate", 
+                    cred
+                )
+                if can_rotate:
+                    if st.button(f"🔄 Rotate", key=f"rotate_{cred['id']}"):
+                        if cred_manager.rotate_credential(cred['id'], f"{st.session_state.current_role}@demo.com"):
+                            st.success(f"✅ Credential {cred['id']} rotated successfully!")
+                            st.rerun()
+                        else:
+                            st.error("❌ Failed to rotate credential")
+                elif st.session_state.current_role == "partner":
+                    st.warning("🔒 Rotation not allowed for this credential")
+                
+                # Show update form if requested
+                if st.session_state.get(f"show_update_form_{cred['id']}", False):
+                    show_update_form(cred)
+
+def view_credential_details(credential: Dict):
+    """Display detailed credential information"""
+    st.info("🔍 **Credential Details**")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write(f"**ID:** {credential['id']}")
+        st.write(f"**Supplier:** {credential['supplier']}")
+        st.write(f"**Environment:** {credential['environment']}")
+        st.write(f"**Auth Type:** {credential['auth_type']}")
+    
+    with col2:
+        st.write(f"**Created By:** {credential['created_by']}")
+        st.write(f"**Created At:** {format_timestamp(credential['created_at'])}")
+        st.write(f"**Updated At:** {format_timestamp(credential['updated_at'])}")
+        st.write(f"**Self-Rotation:** {'✅ Yes' if credential['allow_self_rotation'] else '❌ No'}")
+    
+    st.write("**Data:**")
+    if RBACManager.has_permission(st.session_state.current_role, "view_unmasked"):
+        st.json(credential["data"])
+    else:
+        masked_data = mask_secret_data(credential["data"], credential["auth_type"])
+        st.json(masked_data)
+        st.warning("🔒 Data is masked for your role. Admin users can view unmasked data.")
+
+def show_update_form(credential: Dict):
+    """Show form to update credential"""
+    st.info(f"✏️ **Update Credential {credential['id']}**")
+    
+    with st.form(f"update_form_{credential['id']}"):
+        new_auth_type = st.selectbox(
+            "Auth Type:",
+            ["api_key", "username_password"],
+            index=0 if credential["auth_type"] == "api_key" else 1,
+            key=f"auth_type_{credential['id']}"
+        )
+        
+        new_data = {}
+        
+        if new_auth_type == "api_key":
+            api_key = st.text_input(
+                "API Key:",
+                value=credential["data"].get("api_key", ""),
+                key=f"api_key_{credential['id']}"
+            )
+            new_data = {"api_key": api_key}
+        
+        elif new_auth_type == "username_password":
+            username = st.text_input(
+                "Username:",
+                value=credential["data"].get("username", ""),
+                key=f"username_{credential['id']}"
+            )
+            password = st.text_input(
+                "Password:",
+                value=credential["data"].get("password", ""),
+                type="password",
+                key=f"password_{credential['id']}"
+            )
+            new_data = {"username": username, "password": password}
+        
+        col1, col2, col3 = st.columns([1, 1, 1])
+        
+        with col1:
+            submit_update = st.form_submit_button("💾 Update Credential")
+        
+        with col2:
+            cancel_update = st.form_submit_button("❌ Cancel")
+        
+        if submit_update:
+            if not any(new_data.values()):
+                st.error("❌ Please fill in all required fields")
+            else:
+                if cred_manager.update_credential(
+                    credential["id"], 
+                    new_auth_type, 
+                    new_data, 
+                    f"{st.session_state.current_role}@demo.com"
+                ):
+                    st.success("✅ Credential updated successfully!")
+                    st.session_state[f"show_update_form_{credential['id']}"] = False
+                    st.rerun()
+                else:
+                    st.error("❌ Failed to update credential")
+        
+        if cancel_update:
+            st.session_state[f"show_update_form_{credential['id']}"] = False
+            st.rerun()
+
+def create_credential_tab():
+    """Create new credential tab"""
+    st.header("➕ Create New Credential")
+    
+    # Check permissions
+    if not RBACManager.has_permission(st.session_state.current_role, "create"):
+        st.error("🚫 **Access Denied**: Only admin users can create credentials.")
+        st.info("Current role permissions:")
+        role_info = RBACManager.ROLES[st.session_state.current_role]
+        for perm, value in role_info.items():
+            if not perm.startswith("can_"):
+                continue
+            status = "✅" if value else "❌"
+            st.write(f"{status} {perm.replace('_', ' ').title()}")
+        return
+    
+    with st.form("create_credential_form"):
+        st.subheader("📝 Credential Information")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            supplier = st.text_input(
+                "Supplier Name:",
+                placeholder="e.g., Expedia, Booking.com",
+                help="Name of the API supplier"
+            )
+            environment = st.selectbox(
+                "Environment:",
+                ["production", "sandbox", "staging", "development"],
+                help="Target environment for the credential"
+            )
+        
+        with col2:
+            auth_type = st.selectbox(
+                "Authentication Type:",
+                ["api_key", "username_password"],
+                help="Type of authentication required"
+            )
+            created_by = st.text_input(
+                "Created By:",
+                value=f"{st.session_state.current_role}@demo.com",
+                disabled=True,
+                help="User creating the credential"
+            )
+        
+        st.subheader("🔑 Authentication Data")
+        
+        credential_data = {}
+        
+        if auth_type == "api_key":
+            api_key = st.text_input(
+                "API Key:",
+                placeholder="Enter the API key",
+                help="The API key provided by the supplier"
+            )
+            if api_key:
+                credential_data = {"api_key": api_key}
+        
+        elif auth_type == "username_password":
+            col1, col2 = st.columns(2)
+            with col1:
+                username = st.text_input(
+                    "Username:",
+                    placeholder="Enter username",
+                    help="Username for authentication"
+                )
+            with col2:
+                password = st.text_input(
+                    "Password:",
+                    placeholder="Enter password",
+                    type="password",
+                    help="Password for authentication"
+                )
+            if username and password:
+                credential_data = {"username": username, "password": password}
+        
+        st.subheader("⚙️ Additional Options")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            allow_self_rotation = st.checkbox(
+                "Allow Partner Self-Rotation",
+                value=False,
+                help="Allow partner role to rotate this credential"
+            )
+        
+        with col2:
+            # Preview button
+            if st.form_submit_button("👁️ Preview Credential"):
+                if supplier and environment and credential_data:
+                    st.success("✅ **Credential Preview**")
+                    
+                    preview_data = {
+                        "ID": "New",
+                        "Supplier": supplier,
+                        "Environment": environment,
+                        "Auth Type": auth_type,
+                        "Data": json.dumps(credential_data, indent=2),
+                        "Created By": created_by,
+                        "Allow Self-Rotation": allow_self_rotation
+                    }
+                    
+                    for key, value in preview_data.items():
+                        st.write(f"**{key}:** {value}")
+                else:
+                    st.warning("⚠️ Please fill in all required fields to see preview")
+        
+        # Submit button
+        if st.form_submit_button("🚀 Create Credential", type="primary"):
+            # Validation
+            if not supplier:
+                st.error("❌ Supplier name is required")
+            elif not environment:
+                st.error("❌ Environment is required")
+            elif not credential_data:
+                st.error("❌ Authentication data is required")
+            else:
+                # Create the credential
+                if cred_manager.create_credential(supplier, environment, auth_type, credential_data, created_by):
+                    st.success("🎉 **Credential created successfully!**")
+                    st.balloons()
+                    st.info("The credential has been saved to the database and logged in the audit trail.")
+                    st.rerun()
+                else:
+                    st.error("❌ Failed to create credential. Please check the logs for details.")
+
+def audit_logs_tab():
+    """Audit logs tab"""
+    st.header("📋 Audit Trail")
+    
+    # Check permissions
+    if not RBACManager.has_permission(st.session_state.current_role, "view_audit"):
+        st.error("🚫 **Access Denied**: You don't have permission to view audit logs.")
+        st.info("Only admin and devops roles can view audit logs.")
+        return
+    
+    # Filter options
+    st.subheader("🔍 Filter Options")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        filter_supplier = st.selectbox(
+            "Filter by Supplier:",
+            ["All"] + list(set([cred["supplier"] for cred in cred_manager.get_all_credentials()])),
+            help="Filter logs by supplier"
+        )
+    
+    with col2:
+        filter_action = st.selectbox(
+            "Filter by Action:",
+            ["All", "create", "update", "rotate"],
+            help="Filter logs by action type"
+        )
+    
+    with col3:
+        filter_actor = st.selectbox(
+            "Filter by Actor:",
+            ["All"] + list(set([log["actor"] for log in cred_manager.get_audit_logs()])),
+            help="Filter logs by actor (user who performed the action)"
+        )
+    
+    # Get audit logs
+    all_logs = cred_manager.get_audit_logs()
+    
+    # Apply filters
+    filtered_logs = all_logs
+    
+    if filter_supplier != "All":
+        filtered_logs = [log for log in filtered_logs if log["supplier"] == filter_supplier]
+    
+    if filter_action != "All":
+        filtered_logs = [log for log in filtered_logs if log["action"] == filter_action]
+    
+    if filter_actor != "All":
+        filtered_logs = [log for log in filtered_logs if log["actor"] == filter_actor]
+    
+    # Display results
+    st.subheader(f"📊 Found {len(filtered_logs)} audit log entries")
+    
+    if not filtered_logs:
+        st.info("No audit logs found matching your filters.")
+        return
+    
+    # Create dataframe for display
+    log_data = []
+    for log in filtered_logs:
+        log_data.append({
+            "ID": log["id"],
+            "Credential ID": log["cred_id"] if log["cred_id"] else "N/A",
+            "Supplier": log["supplier"],
+            "Action": log["action"].title(),
+            "Actor": log["actor"],
+            "Details": log["details"],
+            "Timestamp": format_timestamp(log["timestamp"])
+        })
+    
+    df_logs = pd.DataFrame(log_data)
+    
+    # Display the table
+    st.dataframe(
+        df_logs,
+        use_container_width=True,
+        hide_index=True
+    )
+    
+    # Export functionality
+    st.subheader("📤 Export Options")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("📄 Export as CSV"):
+            csv_buffer = io.StringIO()
+            df_logs.to_csv(csv_buffer, index=False)
+            csv_data = csv_buffer.getvalue()
+            
+            st.download_button(
+                label="💾 Download CSV",
+                data=csv_data,
+                file_name=f"audit_logs_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv"
+            )
+    
+    with col2:
+        if st.button("📊 Export Summary"):
+            # Create summary statistics
+            summary_data = {
+                "Total Actions": len(filtered_logs),
+                "Actions by Type": df_logs["Action"].value_counts().to_dict(),
+                "Actions by Actor": df_logs["Actor"].value_counts().to_dict(),
+                "Actions by Supplier": df_logs["Supplier"].value_counts().to_dict()
+            }
+            
+            st.json(summary_data)
+
+# Run the app
+if __name__ == "__main__":
+    main()

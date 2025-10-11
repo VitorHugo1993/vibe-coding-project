@@ -207,6 +207,67 @@ st.markdown("""
     .stTextInput > label {
         background-color: white;
     }
+    
+    /* Make all text black */
+    .stApp {
+        color: black !important;
+    }
+    
+    .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6 {
+        color: black !important;
+    }
+    
+    .stApp p, .stApp div, .stApp span {
+        color: black !important;
+    }
+    
+    /* Ensure Streamlit elements have black text */
+    .stMarkdown {
+        color: black !important;
+    }
+    
+    .stText {
+        color: black !important;
+    }
+    
+    /* Override any default text colors */
+    .element-container {
+        color: black !important;
+    }
+    
+    /* Ensure table headers and content are black */
+    .stDataFrame th, .stDataFrame td {
+        color: black !important;
+    }
+    
+    /* Ensure sidebar text is black */
+    .stSidebar {
+        color: black !important;
+    }
+    
+    .stSidebar h1, .stSidebar h2, .stSidebar h3 {
+        color: black !important;
+    }
+    
+    /* Ensure form labels and text are black */
+    .stForm label {
+        color: black !important;
+    }
+    
+    /* Ensure tab text is black */
+    .stTabs [data-baseweb="tab"] {
+        color: black !important;
+    }
+    
+    /* Override any inherited colors */
+    .main .block-container {
+        color: black !important;
+    }
+    
+    /* Ensure expander content is black */
+    .streamlit-expanderContent {
+        color: black !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 

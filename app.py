@@ -47,17 +47,41 @@ st.markdown("""
     .stButton > button[kind="primary"] {
         background-color: #dc3545 !important;
         border-color: #dc3545 !important;
+        color: white !important;
     }
     
     .stButton > button[kind="primary"]:hover {
         background-color: #c82333 !important;
         border-color: #bd2130 !important;
+        color: white !important;
     }
     
     /* Secondary buttons */
     .stButton > button[kind="secondary"] {
         background-color: #6c757d !important;
         border-color: #6c757d !important;
+        color: white !important;
+    }
+    
+    /* Form submit buttons */
+    .stForm .stButton > button {
+        background-color: #dc3545 !important;
+        color: white !important;
+        border: 1px solid #dc3545 !important;
+    }
+    
+    .stForm .stButton > button:hover {
+        background-color: #c82333 !important;
+        color: white !important;
+    }
+    
+    /* Ensure all button text is white */
+    button {
+        color: white !important;
+    }
+    
+    /* Override any button text colors */
+    .stButton button, .stForm button {
         color: white !important;
     }
     
@@ -824,14 +848,14 @@ def main():
         # Display actual logo image
         st.markdown(f"""
         <div style="text-align: left; margin-bottom: 1rem;">
-            <img src="{logo_data}" style="height: 40px; width: auto; max-width: 150px;" alt="Nezasa Logo">
+            <img src="{logo_data}" style="height: 60px; width: auto; max-width: 200px;" alt="Nezasa Logo">
         </div>
         """, unsafe_allow_html=True)
     else:
         # Fallback to text logo
         st.markdown("""
         <div style="text-align: left; margin-bottom: 1rem;">
-            <div style="color: #dc3545; font-weight: bold; font-size: 1.5rem;">NEZASA</div>
+            <div style="color: #dc3545; font-weight: bold; font-size: 2.2rem;">NEZASA</div>
         </div>
         """, unsafe_allow_html=True)
     
@@ -1144,6 +1168,15 @@ def create_credential_tab():
             )
         
         with col2:
+            # Placeholder for alignment
+            st.write("")  # Empty space to align with checkbox
+        
+        # Aligned buttons
+        st.subheader("🎯 Actions")
+        
+        button_col1, button_col2 = st.columns(2)
+        
+        with button_col1:
             # Preview button
             if st.form_submit_button("👁️ Preview Credential"):
                 if supplier and environment and credential_data:
@@ -1164,24 +1197,25 @@ def create_credential_tab():
                 else:
                     st.warning("⚠️ Please fill in all required fields to see preview")
         
-        # Submit button
-        if st.form_submit_button("🚀 Create Credential", type="primary"):
-            # Validation
-            if not supplier:
-                st.error("❌ Supplier name is required")
-            elif not environment:
-                st.error("❌ Environment is required")
-            elif not credential_data:
-                st.error("❌ Authentication data is required")
-            else:
-                # Create the credential
-                if cred_manager.create_credential(supplier, environment, auth_type, credential_data, created_by):
-                    st.success("🎉 **Credential created successfully!**")
-                    st.balloons()
-                    st.info("The credential has been saved to the database and logged in the audit trail.")
-                    st.rerun()
+        with button_col2:
+            # Submit button
+            if st.form_submit_button("🚀 Create Credential", type="primary"):
+                # Validation
+                if not supplier:
+                    st.error("❌ Supplier name is required")
+                elif not environment:
+                    st.error("❌ Environment is required")
+                elif not credential_data:
+                    st.error("❌ Authentication data is required")
                 else:
-                    st.error("❌ Failed to create credential. Please check the logs for details.")
+                    # Create the credential
+                    if cred_manager.create_credential(supplier, environment, auth_type, credential_data, created_by):
+                        st.success("🎉 **Credential created successfully!**")
+                        st.balloons()
+                        st.info("The credential has been saved to the database and logged in the audit trail.")
+                        st.rerun()
+                    else:
+                        st.error("❌ Failed to create credential. Please check the logs for details.")
 
 def audit_logs_tab():
     """Audit logs tab"""

@@ -223,7 +223,58 @@ st.markdown("""
     
     /* Customize expander headers */
     .streamlit-expanderHeader {
-        background-color: white;
+        background-color: white !important;
+        color: black !important;
+    }
+    
+    /* Expander header hover state */
+    .streamlit-expanderHeader:hover {
+        background-color: #f8f9fa !important;
+        color: black !important;
+    }
+    
+    /* Expander header selected/active state */
+    .streamlit-expanderHeader[aria-expanded="true"] {
+        background-color: #f8f9fa !important;
+        color: black !important;
+    }
+    
+    /* Expander content */
+    .streamlit-expanderContent {
+        background-color: white !important;
+        color: black !important;
+    }
+    
+    /* Ensure expander text is always black */
+    .streamlit-expanderHeader h3,
+    .streamlit-expanderHeader div,
+    .streamlit-expanderHeader span {
+        color: black !important;
+    }
+    
+    /* Expander button styling */
+    .streamlit-expanderHeader button {
+        background-color: transparent !important;
+        color: black !important;
+        border: none !important;
+    }
+    
+    /* Expander icon styling */
+    .streamlit-expanderHeader .streamlit-expanderIcon {
+        color: black !important;
+    }
+    
+    /* Additional expander states */
+    .streamlit-expanderHeader[data-testid="streamlit-expanderHeader"] {
+        background-color: #f8f9fa !important;
+        color: black !important;
+    }
+    
+    /* Focus state for accessibility */
+    .streamlit-expanderHeader:focus {
+        background-color: #f8f9fa !important;
+        color: black !important;
+        outline: 2px solid #dc3545 !important;
     }
     
     /* Customize entire sidebar with darker red background */

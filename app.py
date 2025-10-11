@@ -161,33 +161,87 @@ st.markdown("""
         background-color: white;
     }
     
-    /* Customize sidebar */
-    .css-1d391kg {
-        background-color: #ffeaea !important;
+    /* Customize entire sidebar with darker red background */
+    .stSidebar {
+        background-color: #dc3545 !important;
     }
     
-    /* Additional sidebar styling for light red background */
     .stSidebar .css-1d391kg {
-        background-color: #ffeaea !important;
+        background-color: #dc3545 !important;
     }
     
     /* Sidebar container styling */
     .stSidebar .block-container {
-        background-color: #ffeaea !important;
+        background-color: #dc3545 !important;
     }
     
-    /* Ensure sidebar content has light red background */
+    /* Ensure all sidebar content has darker red background */
     .stSidebar .element-container {
-        background-color: #ffeaea !important;
+        background-color: #dc3545 !important;
     }
     
     /* Sidebar form elements */
     .stSidebar .stSelectbox {
-        background-color: #ffeaea !important;
+        background-color: #dc3545 !important;
+    }
+    
+    .stSidebar .stSelectbox > div > div {
+        background-color: white !important;
+        color: black !important;
     }
     
     .stSidebar .stInfo {
-        background-color: #ffeaea !important;
+        background-color: #dc3545 !important;
+    }
+    
+    /* Sidebar text elements */
+    .stSidebar .stMarkdown {
+        background-color: #dc3545 !important;
+        color: white !important;
+    }
+    
+    .stSidebar .stText {
+        background-color: #dc3545 !important;
+        color: white !important;
+    }
+    
+    /* Sidebar headings */
+    .stSidebar h1, .stSidebar h2, .stSidebar h3, .stSidebar h4, .stSidebar h5, .stSidebar h6 {
+        color: white !important;
+        background-color: #dc3545 !important;
+    }
+    
+    /* Sidebar paragraphs and divs */
+    .stSidebar p, .stSidebar div, .stSidebar span {
+        color: white !important;
+        background-color: #dc3545 !important;
+    }
+    
+    /* Sidebar labels */
+    .stSidebar label {
+        color: white !important;
+        background-color: #dc3545 !important;
+    }
+    
+    /* Override any sidebar background colors */
+    .stSidebar .stApp {
+        background-color: #dc3545 !important;
+    }
+    
+    /* Sidebar main container */
+    .stSidebar > div {
+        background-color: #dc3545 !important;
+    }
+    
+    /* Sidebar expandable sections */
+    .stSidebar .streamlit-expanderHeader {
+        background-color: #dc3545 !important;
+        color: white !important;
+    }
+    
+    .stSidebar .streamlit-expanderContent {
+        background-color: #dc3545 !important;
+        color: white !important;
     }
     
     /* Additional white background overrides */

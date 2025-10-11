@@ -20,32 +20,99 @@ st.set_page_config(
 # Custom CSS for better styling
 st.markdown("""
 <style>
+    /* Set white background for the entire app */
+    .main .block-container {
+        background-color: white;
+    }
+    
+    /* Customize Streamlit buttons to be red */
+    .stButton > button {
+        background-color: #dc3545 !important;
+        color: white !important;
+        border: 1px solid #dc3545 !important;
+        border-radius: 0.25rem !important;
+        padding: 0.25rem 1rem !important;
+        font-weight: 500 !important;
+    }
+    
+    .stButton > button:hover {
+        background-color: #c82333 !important;
+        border-color: #bd2130 !important;
+        color: white !important;
+    }
+    
+    /* Primary buttons (more prominent red) */
+    .stButton > button[kind="primary"] {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+    }
+    
+    .stButton > button[kind="primary"]:hover {
+        background-color: #c82333 !important;
+        border-color: #bd2130 !important;
+    }
+    
+    /* Secondary buttons */
+    .stButton > button[kind="secondary"] {
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+        color: white !important;
+    }
+    
+    /* Logo container */
+    .logo-container {
+        position: fixed;
+        top: 10px;
+        right: 20px;
+        z-index: 999;
+        background-color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .logo-text {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #dc3545;
+        margin: 0;
+    }
+    
+    /* Main header styling */
     .main-header {
         font-size: 2.5rem;
         font-weight: bold;
-        color: #1f77b4;
+        color: #dc3545;
         text-align: center;
         margin-bottom: 2rem;
-        border-bottom: 3px solid #1f77b4;
+        border-bottom: 3px solid #dc3545;
         padding-bottom: 1rem;
+        background-color: white;
     }
+    
+    /* Role badge styling */
     .role-badge {
-        background-color: #e1f5fe;
-        color: #0277bd;
+        background-color: #f8d7da;
+        color: #dc3545;
         padding: 0.25rem 0.75rem;
         border-radius: 1rem;
         font-size: 0.875rem;
         font-weight: bold;
         display: inline-block;
         margin-left: 1rem;
+        border: 1px solid #f5c6cb;
     }
+    
+    /* Credential card styling */
     .credential-card {
         background-color: #f8f9fa;
         padding: 1rem;
         border-radius: 0.5rem;
-        border-left: 4px solid #1f77b4;
+        border-left: 4px solid #dc3545;
         margin: 0.5rem 0;
     }
+    
+    /* Success message styling */
     .success-message {
         background-color: #d4edda;
         color: #155724;
@@ -54,6 +121,8 @@ st.markdown("""
         border: 1px solid #c3e6cb;
         margin: 1rem 0;
     }
+    
+    /* Error message styling */
     .error-message {
         background-color: #f8d7da;
         color: #721c24;
@@ -62,6 +131,8 @@ st.markdown("""
         border: 1px solid #f5c6cb;
         margin: 1rem 0;
     }
+    
+    /* Warning message styling */
     .warning-message {
         background-color: #fff3cd;
         color: #856404;
@@ -69,6 +140,72 @@ st.markdown("""
         border-radius: 0.25rem;
         border: 1px solid #ffeaa7;
         margin: 1rem 0;
+    }
+    
+    /* Override Streamlit's default theme colors */
+    .stSelectbox > div > div {
+        background-color: white;
+    }
+    
+    .stTextInput > div > div > input {
+        background-color: white;
+    }
+    
+    /* Make sure the main content area has white background */
+    .stApp {
+        background-color: white;
+    }
+    
+    /* Customize expander headers */
+    .streamlit-expanderHeader {
+        background-color: white;
+    }
+    
+    /* Customize sidebar */
+    .css-1d391kg {
+        background-color: white;
+    }
+    
+    /* Additional white background overrides */
+    .stApp > header {
+        background-color: white;
+    }
+    
+    .stApp > div {
+        background-color: white;
+    }
+    
+    /* Ensure dataframes have white background */
+    .stDataFrame {
+        background-color: white;
+    }
+    
+    /* Customize tabs */
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: white;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background-color: white;
+    }
+    
+    /* Customize form elements */
+    .stForm {
+        background-color: white;
+    }
+    
+    /* Ensure all containers have white background */
+    .block-container {
+        background-color: white !important;
+    }
+    
+    /* Customize selectbox and input backgrounds */
+    .stSelectbox > label {
+        background-color: white;
+    }
+    
+    .stTextInput > label {
+        background-color: white;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -476,6 +613,20 @@ def format_timestamp(timestamp_str: str) -> str:
 
 # Streamlit UI
 def main():
+    # Add Nezasa logo in top-right corner
+    st.markdown("""
+    <div class="logo-container">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#dc3545"/>
+                <path d="M2 17L12 22L22 17" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 12L12 17L22 12" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p class="logo-text">NEZASA</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
     # Header
     st.markdown('<h1 class="main-header">🔐 Nezasa Connect API Credential Management – POC</h1>', unsafe_allow_html=True)
     

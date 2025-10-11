@@ -1489,13 +1489,6 @@ def create_credential_tab():
             st.write(f"{status} {perm.replace('_', ' ').title()}")
         return
     
-    # Add a clear form button outside the form
-    if st.button("🧹 Clear Form", help="Clear all form fields"):
-        # Clear all form-related session state
-        keys_to_clear = [key for key in st.session_state.keys() if key.startswith('create_')]
-        for key in keys_to_clear:
-            del st.session_state[key]
-        st.rerun()
     
     with st.form("create_credential_form"):
         st.subheader("📝 Credential Information")
@@ -1639,6 +1632,21 @@ def create_credential_tab():
                         st.rerun()
                     else:
                         st.error("❌ Failed to create credential. Please check the logs for details.")
+    
+    # Clear Form button outside the form
+    st.markdown("---")
+    st.subheader("🧹 Form Management")
+    
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col2:
+        if st.button("🧹 Clear Form", type="primary", help="Clear all form fields"):
+            # Clear all form-related session state
+            keys_to_clear = [key for key in st.session_state.keys() if key.startswith('create_')]
+            for key in keys_to_clear:
+                del st.session_state[key]
+            st.success("✅ Form cleared successfully!")
+            st.rerun()
 
 def audit_logs_tab():
     """Audit logs tab"""

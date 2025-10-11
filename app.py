@@ -1284,6 +1284,17 @@ def dashboard_tab():
     """Dashboard tab with credential table and management actions"""
     st.header("📊 Credential Dashboard")
     
+    # Show success messages if any actions were completed
+    for key, value in st.session_state.items():
+        if key.startswith("rotate_success_") and value:
+            cred_id = key.replace("rotate_success_", "")
+            st.success(f"✅ Credential {cred_id} rotated successfully!")
+            st.session_state[key] = False  # Clear the flag
+        elif key.startswith("update_success_") and value:
+            cred_id = key.replace("update_success_", "")
+            st.success(f"✅ Credential {cred_id} updated successfully!")
+            st.session_state[key] = False  # Clear the flag
+    
     # Get all credentials
     credentials = cred_manager.get_all_credentials()
     
@@ -1351,7 +1362,10 @@ def dashboard_tab():
                 if can_rotate:
                     if st.button(f"🔄 Rotate", key=f"rotate_{cred['id']}"):
                         if cred_manager.rotate_credential(cred['id'], f"{st.session_state.current_role}@demo.com"):
+                            st.session_state[f"rotate_success_{cred['id']}"] = True
                             st.success(f"✅ Credential {cred['id']} rotated successfully!")
+                            import time
+                            time.sleep(1)
                             st.rerun()
                         else:
                             st.error("❌ Failed to rotate credential")
@@ -1442,8 +1456,11 @@ def show_update_form(credential: Dict):
                     new_data, 
                     f"{st.session_state.current_role}@demo.com"
                 ):
+                    st.session_state[f"update_success_{credential['id']}"] = True
                     st.success("✅ Credential updated successfully!")
                     st.session_state[f"show_update_form_{credential['id']}"] = False
+                    import time
+                    time.sleep(1)
                     st.rerun()
                 else:
                     st.error("❌ Failed to update credential")
@@ -1455,6 +1472,13 @@ def show_update_form(credential: Dict):
 def create_credential_tab():
     """Create new credential tab"""
     st.header("➕ Create New Credential")
+    
+    # Show success message if credential was created
+    if st.session_state.get('show_creation_success', False):
+        st.success("🎉 **Credential created successfully!**")
+        st.info("The credential has been saved to the database and logged in the audit trail.")
+        # Clear the flag so it doesn't show again
+        st.session_state.show_creation_success = False
     
     # Check permissions
     if not RBACManager.has_permission(st.session_state.current_role, "create"):
@@ -1598,14 +1622,19 @@ def create_credential_tab():
                 elif not credential_data:
                     st.error("❌ Authentication data is required")
                 else:
-                    # Create the credential
-                    if cred_manager.create_credential(supplier, environment, auth_type, credential_data, created_by):
-                        st.success("🎉 **Credential created successfully!**")
-                        st.balloons()
-                        st.info("The credential has been saved to the database and logged in the audit trail.")
-                        st.rerun()
-                    else:
-                        st.error("❌ Failed to create credential. Please check the logs for details.")
+                # Create the credential
+                if cred_manager.create_credential(supplier, environment, auth_type, credential_data, created_by):
+                    st.success("🎉 **Credential created successfully!**")
+                    st.balloons()
+                    st.info("The credential has been saved to the database and logged in the audit trail.")
+                    # Store success message in session state to persist
+                    st.session_state.show_creation_success = True
+                    # Small delay before rerun to show messages
+                    import time
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error("❌ Failed to create credential. Please check the logs for details.")
 
 def audit_logs_tab():
     """Audit logs tab"""

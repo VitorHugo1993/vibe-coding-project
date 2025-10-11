@@ -372,19 +372,21 @@ st.markdown("""
         opacity: 1 !important;
     }
     
-    /* Style disabled input fields to match placeholder color */
+    /* Style disabled input fields to match placeholder color but keep white background */
     .stTextInput input[disabled] {
         color: #666666 !important;
+        background-color: white !important;
     }
     
     .stTextInput input[disabled="true"] {
         color: #666666 !important;
+        background-color: white !important;
     }
     
     /* Override any disabled input styling */
     input[disabled], input[disabled="true"] {
         color: #666666 !important;
-        background-color: #f8f9fa !important;
+        background-color: white !important;
     }
     
     /* Make sure the main content area has white background */

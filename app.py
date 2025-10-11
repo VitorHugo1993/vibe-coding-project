@@ -12,7 +12,7 @@ import csv
 # Page configuration
 st.set_page_config(
     page_title="Nezasa Connect API Credential Management",
-    page_icon="🔐",
+   # page_icon="🔐",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -59,16 +59,25 @@ st.markdown("""
         color: white !important;
     }
     
-    /* Logo container */
+    /* Logo container - moved to top left */
     .logo-container {
         position: fixed;
         top: 10px;
-        right: 20px;
+        left: 20px;
         z-index: 999;
         background-color: white;
-        padding: 5px 10px;
-        border-radius: 5px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 8px 12px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .logo-image {
+        height: 32px;
+        width: auto;
+        max-width: 120px;
     }
     
     .logo-text {
@@ -752,19 +761,30 @@ def format_timestamp(timestamp_str: str) -> str:
 
 # Streamlit UI
 def main():
-    # Add Nezasa logo in top-right corner
-    st.markdown("""
-    <div class="logo-container">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#dc3545"/>
-                <path d="M2 17L12 22L22 17" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="#dc3545" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <p class="logo-text">NEZASA</p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Add Nezasa logo in top-left corner
+    # Create a container for the logo using Streamlit's columns
+    col1, col2, col3 = st.columns([1, 4, 1])
+    
+    with col1:
+        # Try to load the Nezasa logo image
+        try:
+            # Check if logo file exists
+            import os
+            logo_paths = ["nezasa_logo.png", "nezasa_logo.jpg", "nezasa_logo.svg", "logo.png", "logo.jpg"]
+            logo_found = False
+            
+            for logo_path in logo_paths:
+                if os.path.exists(logo_path):
+                    st.image(logo_path, width=120)
+                    logo_found = True
+                    break
+            
+            if not logo_found:
+                # Fallback to text logo if image not found
+                st.markdown('<div style="color: #dc3545; font-weight: bold; font-size: 1.2rem; text-align: left;">NEZASA</div>', unsafe_allow_html=True)
+        except:
+            # Fallback to text logo
+            st.markdown('<div style="color: #dc3545; font-weight: bold; font-size: 1.2rem; text-align: left;">NEZASA</div>', unsafe_allow_html=True)
     
     # Header
     st.markdown('<h1 class="main-header">🔐 Nezasa Connect API Credential Management – POC</h1>', unsafe_allow_html=True)

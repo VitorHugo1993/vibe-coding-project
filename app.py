@@ -1415,8 +1415,8 @@ def dashboard_tab():
             expander_key = f"expander_{cred['id']}"
             is_expanded = st.session_state.get(expander_key, False)
             
-            # Header button
-            if st.button(f"🔐 {cred['supplier']} ({cred['environment']})", key=f"header_{cred['id']}", help="Click to expand/collapse"):
+            # Header button with primary styling
+            if st.button(f"🔐 {cred['supplier']} ({cred['environment']})", key=f"header_{cred['id']}", help="Click to expand/collapse", type="primary"):
                 st.session_state[expander_key] = not is_expanded
                 st.rerun()
             

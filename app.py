@@ -160,6 +160,36 @@ st.markdown("""
     
     .stTextInput > div > div > input {
         background-color: white;
+        color: black !important;
+    }
+    
+    /* Ensure all input text is black and readable */
+    .stTextInput input {
+        color: black !important;
+    }
+    
+    .stTextInput > label {
+        color: black !important;
+    }
+    
+    /* Text area inputs */
+    .stTextArea > div > div > textarea {
+        background-color: white;
+        color: black !important;
+    }
+    
+    .stTextArea textarea {
+        color: black !important;
+    }
+    
+    /* Selectbox text */
+    .stSelectbox > div > div > div {
+        color: black !important;
+    }
+    
+    /* Ensure all form input text is black */
+    .stForm input, .stForm textarea, .stForm select {
+        color: black !important;
     }
     
     /* Make sure the main content area has white background */

@@ -411,6 +411,47 @@ st.markdown("""
     .streamlit-expanderContent {
         color: black !important;
     }
+    
+    /* Fix JSON display box styling */
+    .stJson {
+        background-color: white !important;
+        color: black !important;
+        border: 1px solid #ddd !important;
+        border-radius: 0.25rem !important;
+        padding: 1rem !important;
+    }
+    
+    /* JSON content styling */
+    .stJson pre {
+        background-color: white !important;
+        color: black !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* JSON syntax highlighting fix */
+    .stJson .token.string {
+        color: #0066cc !important;
+    }
+    
+    .stJson .token.number {
+        color: #0066cc !important;
+    }
+    
+    .stJson .token.boolean {
+        color: #0066cc !important;
+    }
+    
+    .stJson .token.null {
+        color: #666 !important;
+    }
+    
+    /* Ensure all JSON elements have proper contrast */
+    .stJson * {
+        color: black !important;
+        background-color: white !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 

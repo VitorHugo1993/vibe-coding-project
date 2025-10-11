@@ -83,6 +83,32 @@ st.markdown("""
         color: white !important;
     }
     
+    /* Ensure all form buttons have the same red styling */
+    .stForm button[type="submit"] {
+        background-color: #dc3545 !important;
+        color: white !important;
+        border: 1px solid #dc3545 !important;
+    }
+    
+    .stForm button[type="submit"]:hover {
+        background-color: #c82333 !important;
+        color: white !important;
+        border-color: #bd2130 !important;
+    }
+    
+    /* Override any secondary button styling in forms */
+    .stForm .stButton > button[kind="secondary"] {
+        background-color: #dc3545 !important;
+        color: white !important;
+        border: 1px solid #dc3545 !important;
+    }
+    
+    .stForm .stButton > button[kind="secondary"]:hover {
+        background-color: #c82333 !important;
+        color: white !important;
+        border-color: #bd2130 !important;
+    }
+    
     /* Ensure all button text is white */
     button {
         color: white !important;
@@ -811,15 +837,15 @@ try:
             use_postgres=True,
             postgres_url=config["postgres_url"]
         )
-        st.success("🔗 Connected to PostgreSQL database")
+        # st.success("🔗 Connected to PostgreSQL database")  # Commented out to remove banner
     else:
         db = DatabaseManager(db_path=config["sqlite_path"])
-        st.info("💾 Using SQLite database (data will persist)")
+        # st.info("💾 Using SQLite database (data will persist)")  # Commented out to remove banner
         
 except ImportError:
     # Fallback to default SQLite if config file not found
     db = DatabaseManager()
-    st.info("💾 Using SQLite database (default)")
+    # st.info("💾 Using SQLite database (default)")  # Commented out to remove banner
 
 # Role-based access control
 class RBACManager:

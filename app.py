@@ -163,7 +163,31 @@ st.markdown("""
     
     /* Customize sidebar */
     .css-1d391kg {
-        background-color: white;
+        background-color: #ffeaea !important;
+    }
+    
+    /* Additional sidebar styling for light red background */
+    .stSidebar .css-1d391kg {
+        background-color: #ffeaea !important;
+    }
+    
+    /* Sidebar container styling */
+    .stSidebar .block-container {
+        background-color: #ffeaea !important;
+    }
+    
+    /* Ensure sidebar content has light red background */
+    .stSidebar .element-container {
+        background-color: #ffeaea !important;
+    }
+    
+    /* Sidebar form elements */
+    .stSidebar .stSelectbox {
+        background-color: #ffeaea !important;
+    }
+    
+    .stSidebar .stInfo {
+        background-color: #ffeaea !important;
     }
     
     /* Additional white background overrides */

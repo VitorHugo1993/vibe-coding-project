@@ -829,34 +829,90 @@ class DatabaseManager:
         if count == 0:
             sample_credentials = [
                 {
-                    "supplier": "SupplierA",
+                    "supplier": "Sabre",
                     "environment": "production",
                     "auth_type": "api_key",
-                    "data": json.dumps({"api_key": "ak_prod_123456789"}),
+                    "data": json.dumps({"api_key": "sabre_prod_key_9x8y7z6"}),
                     "created_by": "alice@nezasa.com",
                     "allow_self_rotation": True
                 },
                 {
-                    "supplier": "SupplierB",
-                    "environment": "sandbox",
-                    "auth_type": "username_password",
-                    "data": json.dumps({"username": "sandbox_user", "password": "sandbox_pass_2024"}),
-                    "created_by": "bob@devops.nezasa.com",
+                    "supplier": "Amadeus",
+                    "environment": "production",
+                    "auth_type": "api_key",
+                    "data": json.dumps({"api_key": "amadeus_api_a1b2c3d4e5"}),
+                    "created_by": "bob@nezasa.com",
                     "allow_self_rotation": False
                 },
                 {
-                    "supplier": "SupplierC",
+                    "supplier": "Google Maps",
                     "environment": "production",
                     "auth_type": "api_key",
-                    "data": json.dumps({"api_key": "ak_prod_987654321"}),
-                    "created_by": "carol@cs.nezasa.com",
+                    "data": json.dumps({"api_key": "AIzaSyD_GoogleMapsKey123"}),
+                    "created_by": "alice@nezasa.com",
+                    "allow_self_rotation": False
+                },
+                {
+                    "supplier": "Stripe",
+                    "environment": "production",
+                    "auth_type": "api_key",
+                    "data": json.dumps({"api_key": "sk_live_stripe_secret_key"}),
+                    "created_by": "carol@nezasa.com",
+                    "allow_self_rotation": True
+                },
+                {
+                    "supplier": "Payyo",
+                    "environment": "sandbox",
+                    "auth_type": "username_password",
+                    "data": json.dumps({"username": "payyo_sandbox", "password": "payyo_2024_test"}),
+                    "created_by": "bob@nezasa.com",
+                    "allow_self_rotation": False
+                },
+                {
+                    "supplier": "Viator",
+                    "environment": "production",
+                    "auth_type": "api_key",
+                    "data": json.dumps({"api_key": "viator_prod_key_v1a2t3"}),
+                    "created_by": "alice@nezasa.com",
+                    "allow_self_rotation": True
+                },
+                {
+                    "supplier": "Musement",
+                    "environment": "production",
+                    "auth_type": "api_key",
+                    "data": json.dumps({"api_key": "musement_api_m9u8s7"}),
+                    "created_by": "carol@nezasa.com",
+                    "allow_self_rotation": False
+                },
+                {
+                    "supplier": "G Adventures",
+                    "environment": "production",
+                    "auth_type": "username_password",
+                    "data": json.dumps({"username": "gadventures_api", "password": "ga_secure_2024"}),
+                    "created_by": "bob@nezasa.com",
+                    "allow_self_rotation": True
+                },
+                {
+                    "supplier": "OTS Globe",
+                    "environment": "staging",
+                    "auth_type": "api_key",
+                    "data": json.dumps({"api_key": "ots_staging_key_o1t2s3"}),
+                    "created_by": "alice@nezasa.com",
+                    "allow_self_rotation": False
+                },
+                {
+                    "supplier": "TUI",
+                    "environment": "production",
+                    "auth_type": "username_password",
+                    "data": json.dumps({"username": "tui_prod_user", "password": "tui_password_2024"}),
+                    "created_by": "carol@nezasa.com",
                     "allow_self_rotation": True
                 }
             ]
             
             now = datetime.datetime.now().isoformat()
             
-            for cred in sample_credentials:
+            for i, cred in enumerate(sample_credentials):
                 cursor.execute("""
                     INSERT INTO credentials (supplier, environment, auth_type, data, created_by, created_at, updated_at, allow_self_rotation)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -883,6 +939,63 @@ class DatabaseManager:
                     f"Created credential for {cred['supplier']} ({cred['environment']})",
                     now
                 ))
+                
+                # Add additional audit log examples for variety
+                if i == 0:  # Sabre - add update log
+                    cursor.execute("""
+                        INSERT INTO audit_logs (cred_id, action, actor, details, timestamp)
+                        VALUES (?, ?, ?, ?, ?)
+                    """, (
+                        cred_id,
+                        "update",
+                        "bob@nezasa.com",
+                        f"Updated authentication data for {cred['supplier']}",
+                        now
+                    ))
+                elif i == 1:  # Amadeus - add rotation log
+                    cursor.execute("""
+                        INSERT INTO audit_logs (cred_id, action, actor, details, timestamp)
+                        VALUES (?, ?, ?, ?, ?)
+                    """, (
+                        cred_id,
+                        "rotate",
+                        "alice@nezasa.com",
+                        f"Rotated API key for {cred['supplier']}",
+                        now
+                    ))
+                elif i == 3:  # Stripe - add view log
+                    cursor.execute("""
+                        INSERT INTO audit_logs (cred_id, action, actor, details, timestamp)
+                        VALUES (?, ?, ?, ?, ?)
+                    """, (
+                        cred_id,
+                        "view",
+                        "carol@nezasa.com",
+                        f"Viewed credential details for {cred['supplier']}",
+                        now
+                    ))
+                elif i == 5:  # Viator - add rotation log
+                    cursor.execute("""
+                        INSERT INTO audit_logs (cred_id, action, actor, details, timestamp)
+                        VALUES (?, ?, ?, ?, ?)
+                    """, (
+                        cred_id,
+                        "rotate",
+                        "bob@nezasa.com",
+                        f"Rotated API key for {cred['supplier']}",
+                        now
+                    ))
+                elif i == 7:  # G Adventures - add update log
+                    cursor.execute("""
+                        INSERT INTO audit_logs (cred_id, action, actor, details, timestamp)
+                        VALUES (?, ?, ?, ?, ?)
+                    """, (
+                        cred_id,
+                        "update",
+                        "carol@nezasa.com",
+                        f"Updated password for {cred['supplier']}",
+                        now
+                    ))
             
                 conn.commit()
             
@@ -899,34 +1012,90 @@ class DatabaseManager:
                 if count == 0:
                     sample_credentials = [
                         {
-                            "supplier": "SupplierA",
+                            "supplier": "Sabre",
                             "environment": "production",
                             "auth_type": "api_key",
-                            "data": json.dumps({"api_key": "ak_prod_123456789"}),
+                            "data": json.dumps({"api_key": "sabre_prod_key_9x8y7z6"}),
                             "created_by": "alice@nezasa.com",
                             "allow_self_rotation": True
                         },
                         {
-                            "supplier": "SupplierB",
-                            "environment": "sandbox",
-                            "auth_type": "username_password",
-                            "data": json.dumps({"username": "sandbox_user", "password": "sandbox_pass_2024"}),
-                            "created_by": "bob@devops.nezasa.com",
+                            "supplier": "Amadeus",
+                            "environment": "production",
+                            "auth_type": "api_key",
+                            "data": json.dumps({"api_key": "amadeus_api_a1b2c3d4e5"}),
+                            "created_by": "bob@nezasa.com",
                             "allow_self_rotation": False
                         },
                         {
-                            "supplier": "SupplierC",
+                            "supplier": "Google Maps",
                             "environment": "production",
                             "auth_type": "api_key",
-                            "data": json.dumps({"api_key": "ak_prod_987654321"}),
-                            "created_by": "carol@cs.nezasa.com",
+                            "data": json.dumps({"api_key": "AIzaSyD_GoogleMapsKey123"}),
+                            "created_by": "alice@nezasa.com",
+                            "allow_self_rotation": False
+                        },
+                        {
+                            "supplier": "Stripe",
+                            "environment": "production",
+                            "auth_type": "api_key",
+                            "data": json.dumps({"api_key": "sk_live_stripe_secret_key"}),
+                            "created_by": "carol@nezasa.com",
+                            "allow_self_rotation": True
+                        },
+                        {
+                            "supplier": "Payyo",
+                            "environment": "sandbox",
+                            "auth_type": "username_password",
+                            "data": json.dumps({"username": "payyo_sandbox", "password": "payyo_2024_test"}),
+                            "created_by": "bob@nezasa.com",
+                            "allow_self_rotation": False
+                        },
+                        {
+                            "supplier": "Viator",
+                            "environment": "production",
+                            "auth_type": "api_key",
+                            "data": json.dumps({"api_key": "viator_prod_key_v1a2t3"}),
+                            "created_by": "alice@nezasa.com",
+                            "allow_self_rotation": True
+                        },
+                        {
+                            "supplier": "Musement",
+                            "environment": "production",
+                            "auth_type": "api_key",
+                            "data": json.dumps({"api_key": "musement_api_m9u8s7"}),
+                            "created_by": "carol@nezasa.com",
+                            "allow_self_rotation": False
+                        },
+                        {
+                            "supplier": "G Adventures",
+                            "environment": "production",
+                            "auth_type": "username_password",
+                            "data": json.dumps({"username": "gadventures_api", "password": "ga_secure_2024"}),
+                            "created_by": "bob@nezasa.com",
+                            "allow_self_rotation": True
+                        },
+                        {
+                            "supplier": "OTS Globe",
+                            "environment": "staging",
+                            "auth_type": "api_key",
+                            "data": json.dumps({"api_key": "ots_staging_key_o1t2s3"}),
+                            "created_by": "alice@nezasa.com",
+                            "allow_self_rotation": False
+                        },
+                        {
+                            "supplier": "TUI",
+                            "environment": "production",
+                            "auth_type": "username_password",
+                            "data": json.dumps({"username": "tui_prod_user", "password": "tui_password_2024"}),
+                            "created_by": "carol@nezasa.com",
                             "allow_self_rotation": True
                         }
                     ]
                     
                     now = datetime.datetime.now()
                     
-                    for cred in sample_credentials:
+                    for i, cred in enumerate(sample_credentials):
                         # Insert credential
                         conn.execute(text("""
                             INSERT INTO credentials (supplier, environment, auth_type, data, created_by, created_at, updated_at, allow_self_rotation)
@@ -952,6 +1121,58 @@ class DatabaseManager:
                             "details": f"Created credential for {cred['supplier']} ({cred['environment']})",
                             "timestamp": now
                         })
+                        
+                        # Add additional audit log examples for variety
+                        if i == 0:  # Sabre - add update log
+                            conn.execute(text("""
+                                INSERT INTO audit_logs (cred_id, action, actor, details, timestamp)
+                                VALUES (LASTVAL(), :action, :actor, :details, :timestamp)
+                            """), {
+                                "action": "update",
+                                "actor": "bob@nezasa.com",
+                                "details": f"Updated authentication data for {cred['supplier']}",
+                                "timestamp": now
+                            })
+                        elif i == 1:  # Amadeus - add rotation log
+                            conn.execute(text("""
+                                INSERT INTO audit_logs (cred_id, action, actor, details, timestamp)
+                                VALUES (LASTVAL(), :action, :actor, :details, :timestamp)
+                            """), {
+                                "action": "rotate",
+                                "actor": "alice@nezasa.com",
+                                "details": f"Rotated API key for {cred['supplier']}",
+                                "timestamp": now
+                            })
+                        elif i == 3:  # Stripe - add view log
+                            conn.execute(text("""
+                                INSERT INTO audit_logs (cred_id, action, actor, details, timestamp)
+                                VALUES (LASTVAL(), :action, :actor, :details, :timestamp)
+                            """), {
+                                "action": "view",
+                                "actor": "carol@nezasa.com",
+                                "details": f"Viewed credential details for {cred['supplier']}",
+                                "timestamp": now
+                            })
+                        elif i == 5:  # Viator - add rotation log
+                            conn.execute(text("""
+                                INSERT INTO audit_logs (cred_id, action, actor, details, timestamp)
+                                VALUES (LASTVAL(), :action, :actor, :details, :timestamp)
+                            """), {
+                                "action": "rotate",
+                                "actor": "bob@nezasa.com",
+                                "details": f"Rotated API key for {cred['supplier']}",
+                                "timestamp": now
+                            })
+                        elif i == 7:  # G Adventures - add update log
+                            conn.execute(text("""
+                                INSERT INTO audit_logs (cred_id, action, actor, details, timestamp)
+                                VALUES (LASTVAL(), :action, :actor, :details, :timestamp)
+                            """), {
+                                "action": "update",
+                                "actor": "carol@nezasa.com",
+                                "details": f"Updated password for {cred['supplier']}",
+                                "timestamp": now
+                            })
                     
                     conn.commit()
                     

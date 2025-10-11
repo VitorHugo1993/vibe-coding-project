@@ -1473,11 +1473,8 @@ def create_credential_tab():
     """Create new credential tab"""
     st.header("➕ Create New Credential")
     
-    # Show success message if credential was created
+    # Clear any existing success flags (no persistent messages)
     if st.session_state.get('show_creation_success', False):
-        st.success("🎉 **Credential created successfully!**")
-        st.info("The credential has been saved to the database and logged in the audit trail.")
-        # Clear the flag so it doesn't show again
         st.session_state.show_creation_success = False
     
     # Check permissions
@@ -1625,13 +1622,8 @@ def create_credential_tab():
                     # Create the credential
                     if cred_manager.create_credential(supplier, environment, auth_type, credential_data, created_by):
                         st.success("🎉 **Credential created successfully!**")
-                        st.balloons()
-                        st.info("The credential has been saved to the database and logged in the audit trail.")
-                        # Store success message in session state to persist
-                        st.session_state.show_creation_success = True
-                        # Small delay before rerun to show messages
-                        import time
-                        time.sleep(1)
+                        # Clear the flag to prevent persistent messages
+                        st.session_state.show_creation_success = False
                         st.rerun()
                     else:
                         st.error("❌ Failed to create credential. Please check the logs for details.")

@@ -1489,16 +1489,10 @@ def create_credential_tab():
             st.write(f"{status} {perm.replace('_', ' ').title()}")
         return
     
-    # Clear form data if credential was created
-    if st.session_state.get('credential_created', False):
-        # Clear all form-related session state
-        keys_to_clear = [key for key in st.session_state.keys() if key.startswith('create_')]
-        for key in keys_to_clear:
-            del st.session_state[key]
-        # Clear the flag
-        st.session_state.credential_created = False
-
-    with st.form("create_credential_form"):
+    # Get form key for resetting
+    form_key = st.session_state.get('form_key', 0)
+    
+    with st.form(f"create_credential_form_{form_key}"):
         st.subheader("📝 Credential Information")
         
         col1, col2 = st.columns(2)
@@ -1634,8 +1628,8 @@ def create_credential_tab():
                     # Create the credential
                     if cred_manager.create_credential(supplier, environment, auth_type, credential_data, created_by):
                         st.success("🎉 **Credential created successfully!**")
-                        # Set flag to clear form on next load
-                        st.session_state.credential_created = True
+                        # Increment form key to force form reset
+                        st.session_state.form_key = st.session_state.get('form_key', 0) + 1
                         # Add a small delay to keep success message visible longer
                         import time
                         time.sleep(2)

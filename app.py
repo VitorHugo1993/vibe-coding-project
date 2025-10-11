@@ -104,6 +104,42 @@ st.markdown("""
         color: white !important;
     }
     
+    /* Ultra-specific targeting for Streamlit primary buttons */
+    div[data-testid="stButton"] button[kind="primary"],
+    .stButton[kind="primary"] button,
+    .stForm .stButton button[kind="primary"],
+    .element-container .stButton button[kind="primary"] {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: white !important;
+        background: #dc3545 !important;
+    }
+    
+    div[data-testid="stButton"] button[kind="primary"]:hover,
+    .stButton[kind="primary"] button:hover,
+    .stForm .stButton button[kind="primary"]:hover,
+    .element-container .stButton button[kind="primary"]:hover {
+        background-color: #c82333 !important;
+        border-color: #bd2130 !important;
+        color: white !important;
+        background: #c82333 !important;
+    }
+    
+    /* Nuclear option - target by data attributes */
+    button[data-testid="baseButton-primary"] {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: white !important;
+        background: #dc3545 !important;
+    }
+    
+    button[data-testid="baseButton-primary"]:hover {
+        background-color: #c82333 !important;
+        border-color: #bd2130 !important;
+        color: white !important;
+        background: #c82333 !important;
+    }
+    
     /* Secondary buttons */
     .stButton > button[kind="secondary"] {
         background-color: #6c757d !important;
@@ -1532,7 +1568,7 @@ def create_credential_tab():
         
         with button_col1:
             # Preview button
-            if st.form_submit_button("👁️ Preview Credential"):
+            if st.form_submit_button("👁️ Preview Credential", type="primary"):
                 if supplier and environment and credential_data:
                     st.success("✅ **Credential Preview**")
                     

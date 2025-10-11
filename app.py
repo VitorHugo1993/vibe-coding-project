@@ -1622,8 +1622,18 @@ def create_credential_tab():
                     # Create the credential
                     if cred_manager.create_credential(supplier, environment, auth_type, credential_data, created_by):
                         st.success("🎉 **Credential created successfully!**")
+                        # Clear input fields by clearing session state
+                        if 'create_api_key' in st.session_state:
+                            del st.session_state['create_api_key']
+                        if 'create_username' in st.session_state:
+                            del st.session_state['create_username']
+                        if 'create_password' in st.session_state:
+                            del st.session_state['create_password']
                         # Clear the flag to prevent persistent messages
                         st.session_state.show_creation_success = False
+                        # Add a small delay to keep success message visible longer
+                        import time
+                        time.sleep(2)
                         st.rerun()
                     else:
                         st.error("❌ Failed to create credential. Please check the logs for details.")

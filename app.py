@@ -43,9 +43,23 @@ st.markdown("""
         border-radius: 0.25rem !important;
         padding: 0.25rem 1rem !important;
         font-weight: 500 !important;
+        width: 100% !important;
     }
     
     .stButton > button:hover {
+        background-color: #c82333 !important;
+        border-color: #bd2130 !important;
+        color: white !important;
+    }
+    
+    /* Ensure all buttons have consistent red styling */
+    button, .stButton button, div[data-testid="stButton"] button {
+        background-color: #dc3545 !important;
+        color: white !important;
+        border: 1px solid #dc3545 !important;
+    }
+    
+    button:hover, .stButton button:hover, div[data-testid="stButton"] button:hover {
         background-color: #c82333 !important;
         border-color: #bd2130 !important;
         color: white !important;

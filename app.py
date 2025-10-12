@@ -1559,16 +1559,7 @@ def main():
 
 def dashboard_tab():
     """Dashboard tab with credential table and management actions"""
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.header("📊 Credential Dashboard")
-    with col2:
-        if st.button("🔄 Refresh Data", help="Refresh to see changes from API requests"):
-            # Clear any cached data
-            st.cache_data.clear()
-            st.cache_resource.clear()
-            # Force a fresh page load
-            st.rerun()
+    st.header("📊 Credential Dashboard")
     
     # Show success messages if any actions were completed
     for key, value in st.session_state.items():

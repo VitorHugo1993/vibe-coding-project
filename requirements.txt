@@ -6,6 +6,11 @@ pandas>=2.0.0
 psycopg2-binary>=2.9.0
 sqlalchemy>=2.0.0
 
+# API dependencies
+fastapi>=0.104.0
+uvicorn>=0.24.0
+pydantic>=2.0.0
+
 # Development dependencies
 # pytest>=7.4.0
 # black>=23.0.0

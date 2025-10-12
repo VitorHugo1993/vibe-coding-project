@@ -1,205 +1,235 @@
-# 🔐 Nezasa Connect API Credential Management System (POC)
+# Nezasa Connect API – Credential Management System
 
-A comprehensive Streamlit application that simulates the Nezasa Connect API Credential Management System for product demonstration during interviews.
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.8+
-- pip (Python package manager)
-
-### Installation & Setup
-
-1. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Run the application:**
-   ```bash
-   streamlit run app.py
-   ```
-
-3. **Access the app:**
-   - Open your browser to `http://localhost:8501`
-   - The app will automatically initialize the SQLite database with sample data
-
-## 🎯 Demo Features
-
-### ✅ Core Functionality
-- **Role-Based Access Control (RBAC)**: 4 distinct roles with different permissions
-- **Credential Management**: Full CRUD operations for API credentials
-- **Credential Rotation**: Automatic secret regeneration with audit logging
-- **Audit Trail**: Complete action logging with filtering and export capabilities
-- **Security Simulation**: Credential masking based on user roles
-- **Professional UI**: Clean, modern interface optimized for demos
-
-### 🔑 Supported Roles
-
-| Role | Create | Update | Rotate | View Unmasked | View Audit |
-|------|--------|--------|--------|---------------|------------|
-| **Admin** | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **DevOps** | ❌ | ✅ | ❌ | ✅ | ✅ |
-| **CS** | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Partner** | ❌ | ❌ | Conditional* | ❌ | ❌ |
-
-*Partners can rotate credentials only if `allow_self_rotation` is enabled
-
-### 📊 Sample Data
-The app comes pre-loaded with 3 example credentials:
-- **SupplierA** (production, API key) - Created by alice@nezasa.com
-- **SupplierB** (sandbox, username/password) - Created by bob@devops.nezasa.com  
-- **SupplierC** (production, API key) - Created by carol@cs.nezasa.com
-
-## 🎬 Demo Flow (10-minute presentation)
-
-### 1. **Introduction (2 minutes)**
-- Show the clean, professional UI
-- Explain the role selector and RBAC system
-- Demonstrate the 3 main tabs: Dashboard, Create Credential, Audit Logs
-
-### 2. **Admin Demo (3 minutes)**
-- Switch to **Admin** role
-- Create a new credential for "Expedia" (production, API key)
-- Show the credential appears in the dashboard
-- Demonstrate credential rotation
-- View audit logs to show the actions were logged
-
-### 3. **Role-Based Access Demo (3 minutes)**
-- Switch to **Partner** role
-- Show masked credential data (`*****1234`)
-- Attempt to rotate a credential (success if allowed, failure if not)
-- Switch to **CS** role
-- Show read-only access with masked data
-- Switch to **DevOps** role
-- Demonstrate update functionality
-
-### 4. **Audit & Compliance Demo (2 minutes)**
-- Switch back to **Admin**
-- Open Audit Logs tab
-- Show filtering by supplier, action, actor
-- Demonstrate CSV export functionality
-- Highlight compliance and audit trail benefits
-
-## 🏗️ Technical Architecture
-
-### Database Schema
-```sql
--- Credentials table
-credentials (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    supplier TEXT NOT NULL,
-    environment TEXT NOT NULL,
-    auth_type TEXT NOT NULL,
-    data TEXT NOT NULL,  -- JSON format
-    created_by TEXT NOT NULL,
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL,
-    allow_self_rotation BOOLEAN DEFAULT FALSE
-)
-
--- Audit logs table
-audit_logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    cred_id INTEGER,
-    action TEXT NOT NULL,
-    actor TEXT NOT NULL,
-    details TEXT NOT NULL,
-    timestamp TEXT NOT NULL,
-    FOREIGN KEY (cred_id) REFERENCES credentials (id)
-)
-```
-
-### Key Classes
-- **DatabaseManager**: SQLite database operations and initialization
-- **RBACManager**: Role-based access control logic
-- **CredentialManager**: CRUD operations and business logic
-
-### Security Features
-- Credential masking for non-admin roles
-- Audit logging for all actions
-- Permission validation before operations
-- Simulated encryption (shows `encrypted(...)` format)
-
-## 🔧 Customization Options
-
-### Adding New Roles
-Edit the `RBACManager.ROLES` dictionary in `app.py`:
-```python
-"new_role": {
-    "can_create": True,
-    "can_update": False,
-    "can_rotate": True,
-    "can_view_unmasked": False,
-    "can_view_audit": True,
-    "description": "Custom role description"
-}
-```
-
-### Adding New Auth Types
-1. Update the `auth_type` selectbox options
-2. Add handling in the credential creation/update forms
-3. Update the `mask_secret_data()` function for proper masking
-
-### Styling Customization
-Modify the CSS in the `st.markdown()` call at the top of `main()` function.
-
-## 🚀 Production Considerations
-
-This is a **Proof of Concept** application. For production use, consider:
-
-### Security
-- Replace SQLite with PostgreSQL/MySQL
-- Implement proper encryption (not simulated)
-- Add HTTPS and proper authentication
-- Use environment variables for sensitive configuration
-- Implement rate limiting and input validation
-
-### Scalability
-- Add database connection pooling
-- Implement caching (Redis)
-- Add API endpoints for external integrations
-- Consider microservices architecture
-
-### Integration
-- Connect to actual supplier APIs for validation
-- Integrate with HashiCorp Vault or similar secret management
-- Add LDAP/Active Directory integration
-- Implement webhook notifications
-
-## 📁 File Structure
-
-```
-vibe-coding-project/
-├── app.py                 # Main Streamlit application
-├── requirements.txt       # Python dependencies
-├── README.md             # This documentation
-├── credentials.db        # SQLite database (auto-created)
-└── .gitignore           # Git ignore rules
-```
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **Port already in use:**
-   ```bash
-   streamlit run app.py --server.port 8502
-   ```
-
-2. **Database permissions:**
-   - Ensure write permissions in the project directory
-   - Delete `credentials.db` to reset sample data
-
-3. **Missing dependencies:**
-   ```bash
-   pip install --upgrade streamlit pandas
-   ```
-
-## 📞 Support
-
-This is a demonstration application created for product interviews. For questions about the implementation or customization, refer to the inline code comments in `app.py`.
+A comprehensive credential management system with both a **Streamlit UI** and a **REST API** for managing supplier API credentials with role-based access control (RBAC).
 
 ---
 
-**Built with ❤️ using Streamlit**
+## 🚀 Quick Start
+
+### 1. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Run the Application
+
+#### Option A: Streamlit UI (Recommended for Demo)
+
+```bash
+streamlit run app.py
+```
+
+Access the UI at: **http://localhost:8501**
+
+#### Option B: REST API
+
+```bash
+python api.py
+```
+
+Or with uvicorn:
+
+```bash
+uvicorn api:app --reload --host 0.0.0.0 --port 8000
+```
+
+Access the API at: **http://localhost:8000**
+
+Interactive API docs: **http://localhost:8000/api/docs**
+
+#### Option C: Run Both Simultaneously
+
+**Terminal 1:**
+```bash
+streamlit run app.py
+```
+
+**Terminal 2:**
+```bash
+python api.py
+```
+
+---
+
+## 📋 Features
+
+### Streamlit UI
+- ✅ **Role-Based Access Control** - Admin, DevOps, CS, Partner roles
+- ✅ **Credential Management** - Create, update, view, rotate, delete credentials
+- ✅ **Credential Dashboard** - Visual overview of all credentials
+- ✅ **Audit Trail** - Complete history of all credential operations
+- ✅ **Secret Masking** - Automatic masking for non-admin roles
+- ✅ **Real Suppliers** - Pre-loaded with Sabre, Amadeus, Google Maps, Stripe, etc.
+
+### REST API
+- ✅ **Full CRUD Operations** - Create, Read, Update, Delete credentials
+- ✅ **Credential Rotation** - Automated key/password rotation
+- ✅ **Audit Logging** - Track all API operations
+- ✅ **Role-Based Permissions** - API key authentication with RBAC
+- ✅ **OpenAPI/Swagger Docs** - Interactive API documentation
+- ✅ **Filtering & Search** - Query credentials by supplier, environment
+
+---
+
+## 🔐 Demo Credentials
+
+### Streamlit UI Roles
+Select from the sidebar:
+- `admin` - Full access
+- `devops` - Update, view unmasked
+- `cs` - View masked only
+- `partner` - View masked, rotate if allowed
+
+### API Keys
+| API Key | Role | Use Case |
+|---------|------|----------|
+| `admin_key_123` | admin | Full API access |
+| `devops_key_456` | devops | Update & view operations |
+| `cs_key_789` | cs | Read-only access |
+| `partner_key_012` | partner | Self-service rotation |
+
+---
+
+## 📖 Documentation
+
+- **API Reference:** See [API_REFERENCE.md](./API_REFERENCE.md)
+- **Database Setup:** See [DATABASE_SETUP.md](./DATABASE_SETUP.md)
+
+---
+
+## 🧪 Testing the API
+
+### Example: Create a Credential
+
+```bash
+curl -X POST http://localhost:8000/api/v1/credentials \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: admin_key_123" \
+  -d '{
+    "supplier": "Stripe",
+    "environment": "production",
+    "auth_type": "api_key",
+    "data": {"api_key": "sk_live_xyz123"},
+    "allow_self_rotation": false
+  }'
+```
+
+### Example: List All Credentials
+
+```bash
+curl -X GET http://localhost:8000/api/v1/credentials \
+  -H "X-API-Key: admin_key_123"
+```
+
+### Example: Rotate a Credential
+
+```bash
+curl -X POST http://localhost:8000/api/v1/credentials/1/rotate \
+  -H "X-API-Key: admin_key_123"
+```
+
+---
+
+## 🗂️ Project Structure
+
+```
+vibe-coding-project/
+├── app.py                  # Streamlit UI application
+├── api.py                  # FastAPI REST API
+├── credentials.db          # SQLite database (auto-created)
+├── database_config.py      # Database configuration
+├── requirements.txt        # Python dependencies
+├── API_REFERENCE.md        # Complete API documentation
+├── DATABASE_SETUP.md       # Database setup guide
+└── README.md              # This file
+```
+
+---
+
+## 🏢 Pre-loaded Suppliers
+
+The system comes with 10 real supplier credentials:
+
+1. **Sabre** - GDS/Travel API
+2. **Amadeus** - GDS/Travel API
+3. **Google Maps** - Mapping API
+4. **Stripe** - Payment Processing
+5. **Payyo** - Payment Gateway
+6. **Viator** - Tours & Activities
+7. **Musement** - Tours & Activities
+8. **G Adventures** - Travel Tours
+9. **OTS Globe** - Travel Technology
+10. **TUI** - Travel & Tourism
+
+---
+
+## 🎯 Use Cases
+
+### 1. Self-Service Partner Portal
+Partners can view and rotate their own credentials without contacting support.
+
+### 2. DevOps Automation
+DevOps team can integrate the API into CI/CD pipelines for automated credential rotation.
+
+### 3. Customer Support
+CS team can safely view credential information (masked) to assist customers.
+
+### 4. Audit & Compliance
+Admin can review complete audit trails for security and compliance requirements.
+
+---
+
+## 🔧 Configuration
+
+### Switch to PostgreSQL
+
+Edit `database_config.py`:
+
+```python
+return {
+    "use_postgres": True,
+    "postgres_url": "postgresql://user:pass@host:5432/dbname",
+    "sqlite_path": "credentials.db"
+}
+```
+
+See [DATABASE_SETUP.md](./DATABASE_SETUP.md) for details.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Frontend:** Streamlit
+- **Backend API:** FastAPI
+- **Database:** SQLite (default) / PostgreSQL (optional)
+- **ORM:** SQLAlchemy
+- **API Docs:** OpenAPI/Swagger
+- **Authentication:** API Key (demo) / JWT (production-ready)
+
+---
+
+## 📝 Notes
+
+- This is a **demo/POC system** for product interviews
+- For production use, implement:
+  - JWT/OAuth2 authentication
+  - HTTPS/TLS encryption
+  - Proper secrets management (Vault, AWS Secrets Manager)
+  - Rate limiting
+  - Enhanced audit logging
+  - IP whitelisting
+
+---
+
+## 🤝 Support
+
+For questions or issues:
+- Email: engineering@nezasa.com
+- Documentation: See API_REFERENCE.md
+
+---
+
+## 📄 License
+
+Demo/POC for Nezasa product interview purposes.

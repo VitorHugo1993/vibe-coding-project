@@ -10,6 +10,7 @@ import io
 import csv
 import os
 import base64
+import requests
 
 # Database imports
 try:
@@ -18,6 +19,15 @@ try:
     SQLALCHEMY_AVAILABLE = True
 except ImportError:
     SQLALCHEMY_AVAILABLE = False
+
+# API Configuration
+API_BASE_URL = "http://localhost:8000"
+API_KEY_MAP = {
+    "admin": "admin_key_123",
+    "devops": "devops_key_456",
+    "cs": "cs_key_789",
+    "partner": "partner_key_012"
+}
 
 # Page configuration
 st.set_page_config(
@@ -1458,6 +1468,47 @@ class CredentialManager:
 # Initialize credential manager
 cred_manager = CredentialManager(db)
 
+# API Helper Functions
+def make_api_request(method: str, endpoint: str, role: str, data: dict = None) -> tuple:
+    """
+    Make an API request and return (success: bool, response_data: dict, error_message: str)
+    """
+    api_key = API_KEY_MAP.get(role)
+    if not api_key:
+        return False, None, f"No API key found for role: {role}"
+    
+    headers = {
+        "X-API-Key": api_key,
+        "Content-Type": "application/json"
+    }
+    
+    url = f"{API_BASE_URL}{endpoint}"
+    
+    try:
+        if method == "GET":
+            response = requests.get(url, headers=headers, timeout=5)
+        elif method == "POST":
+            response = requests.post(url, headers=headers, json=data, timeout=5)
+        elif method == "PUT":
+            response = requests.put(url, headers=headers, json=data, timeout=5)
+        elif method == "DELETE":
+            response = requests.delete(url, headers=headers, timeout=5)
+        else:
+            return False, None, f"Unsupported HTTP method: {method}"
+        
+        if response.status_code in [200, 201, 204]:
+            return True, response.json() if response.text else None, None
+        else:
+            error_detail = response.json().get('detail', response.text) if response.text else 'Unknown error'
+            return False, None, f"API Error ({response.status_code}): {error_detail}"
+            
+    except requests.exceptions.ConnectionError:
+        return False, None, "⚠️ API server is not running. Please start the API server first."
+    except requests.exceptions.Timeout:
+        return False, None, "⏱️ API request timed out"
+    except Exception as e:
+        return False, None, f"Error: {str(e)}"
+
 # Utility functions
 def load_logo_image():
     """Load the Nezasa logo image if it exists"""
@@ -1652,14 +1703,21 @@ def dashboard_tab():
                 )
                 if can_rotate:
                     if st.button(f"🔄 Rotate", key=f"rotate_{cred['id']}"):
-                        if cred_manager.rotate_credential(cred['id'], f"{st.session_state.current_role}@demo.com"):
+                        # Rotate via API
+                        success, response_data, error_msg = make_api_request(
+                            "POST",
+                            f"/api/v1/credentials/{cred['id']}/rotate",
+                            st.session_state.current_role
+                        )
+                        
+                        if success:
                             st.session_state[f"rotate_success_{cred['id']}"] = True
-                            st.success(f"✅ Credential {cred['id']} rotated successfully!")
+                            st.success(f"✅ Credential {cred['id']} rotated successfully via API!")
                             import time
                             time.sleep(1)
                             st.rerun()
                         else:
-                            st.error("❌ Failed to rotate credential")
+                            st.error(f"❌ Failed to rotate credential: {error_msg}")
                 elif st.session_state.current_role == "partner":
                     st.warning("🔒 Rotation not allowed for this credential")
                 
@@ -1901,15 +1959,31 @@ def create_credential_tab():
                 elif not credential_data:
                     st.error("❌ Authentication data is required")
                 else:
-                    # Create the credential
-                    if cred_manager.create_credential(supplier, environment, auth_type, credential_data, created_by):
-                        st.success("🎉 **Credential created successfully!**")
+                    # Create the credential via API
+                    api_data = {
+                        "supplier": supplier,
+                        "environment": environment,
+                        "auth_type": auth_type,
+                        "data": credential_data,
+                        "allow_self_rotation": allow_self_rotation
+                    }
+                    
+                    success, response_data, error_msg = make_api_request(
+                        "POST", 
+                        "/api/v1/credentials", 
+                        st.session_state.current_role, 
+                        api_data
+                    )
+                    
+                    if success:
+                        st.success("🎉 **Credential created successfully via API!**")
+                        st.info(f"✅ Created credential ID: {response_data['id']}")
                         # Add a small delay to keep success message visible longer
                         import time
                         time.sleep(2)
                         st.rerun()
                     else:
-                        st.error("❌ Failed to create credential. Please check the logs for details.")
+                        st.error(f"❌ Failed to create credential: {error_msg}")
     
 
 def audit_logs_tab():

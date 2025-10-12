@@ -1564,6 +1564,10 @@ def dashboard_tab():
         st.header("📊 Credential Dashboard")
     with col2:
         if st.button("🔄 Refresh Data", help="Refresh to see changes from API requests"):
+            # Clear any cached data
+            st.cache_data.clear()
+            st.cache_resource.clear()
+            # Force a fresh page load
             st.rerun()
     
     # Show success messages if any actions were completed
@@ -1576,6 +1580,20 @@ def dashboard_tab():
             cred_id = key.replace("update_success_", "")
             st.success(f"✅ Credential {cred_id} updated successfully!")
             st.session_state[key] = False  # Clear the flag
+    
+    # Show info about API integration
+    if st.session_state.current_role == "admin":
+        with st.expander("ℹ️ API Integration Info", expanded=False):
+            st.info("**💡 Tip:** After making changes via the API, click the '🔄 Refresh Data' button above to see them here.")
+            st.markdown("""
+            **API is running at:** http://localhost:8000
+            
+            **To verify latest data:**
+            ```bash
+            # Check database directly
+            sqlite3 credentials.db "SELECT id, supplier FROM credentials ORDER BY id DESC LIMIT 5;"
+            ```
+            """)
     
     # Get all credentials
     credentials = cred_manager.get_all_credentials()

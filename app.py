@@ -1546,7 +1546,7 @@ def main():
     st.session_state.current_role = selected_role
     
     # Main tabs
-    tab1, tab2, tab3 = st.tabs(["📊 Dashboard", "➕ Create Credential", "📋 Audit Logs"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📊 Dashboard", "➕ Create Credential", "📋 Audit Logs", "🔍 API Monitor"])
     
     with tab1:
         dashboard_tab()
@@ -1556,6 +1556,9 @@ def main():
     
     with tab3:
         audit_logs_tab()
+    
+    with tab4:
+        api_monitor_tab()
 
 def dashboard_tab():
     """Dashboard tab with credential table and management actions"""
@@ -2007,6 +2010,274 @@ def audit_logs_tab():
             }
             
             st.json(summary_data)
+
+def api_monitor_tab():
+    """API Monitor tab showing live API requests and database view"""
+    st.header("🔍 API Monitor & Database View")
+    
+    st.info("💡 **Demo Tip:** Run API requests in another terminal and watch them appear here in real-time!")
+    
+    # Add auto-refresh toggle
+    col1, col2, col3 = st.columns([2, 1, 1])
+    with col1:
+        st.markdown("### 📡 Live API Request Log")
+    with col2:
+        auto_refresh = st.checkbox("Auto-refresh", value=False, help="Automatically refresh every 2 seconds")
+    with col3:
+        if st.button("🔄 Refresh Now"):
+            st.rerun()
+    
+    # Auto-refresh logic
+    if auto_refresh:
+        import time
+        time.sleep(2)
+        st.rerun()
+    
+    # Read API request log file
+    try:
+        with open("api_requests.log", "r") as f:
+            log_lines = f.readlines()
+            # Get last 50 lines
+            recent_logs = log_lines[-50:] if len(log_lines) > 50 else log_lines
+            
+            if recent_logs:
+                # Display in a nice format
+                log_text = "".join(recent_logs)
+                st.code(log_text, language="log")
+            else:
+                st.info("📭 No API requests yet. Start the API server and make some requests!")
+                st.markdown("""
+                **Quick Start:**
+                ```bash
+                # Terminal 1: Start API
+                python3 api.py
+                
+                # Terminal 2: Make a test request
+                curl -X GET http://localhost:8000/api/v1/credentials \\
+                  -H "X-API-Key: admin_key_123"
+                ```
+                """)
+    except FileNotFoundError:
+        st.warning("⚠️ API log file not found. Make sure the API server has been started at least once.")
+        st.markdown("""
+        **To start the API:**
+        ```bash
+        python3 api.py
+        ```
+        
+        Then make requests using curl or the interactive docs at http://localhost:8000/api/docs
+        """)
+    
+    st.markdown("---")
+    
+    # Database View Section
+    st.markdown("### 🗄️ Database View")
+    
+    # Create tabs for different database views
+    db_tab1, db_tab2, db_tab3 = st.tabs(["📋 Credentials Table", "📝 Audit Logs Table", "📊 Database Stats"])
+    
+    with db_tab1:
+        st.subheader("Credentials Table (Raw Data)")
+        
+        # Get all credentials directly from database
+        credentials = cred_manager.get_all_credentials()
+        
+        if credentials:
+            # Create dataframe with all fields
+            db_data = []
+            for cred in credentials:
+                db_data.append({
+                    "ID": cred["id"],
+                    "Supplier": cred["supplier"],
+                    "Environment": cred["environment"],
+                    "Auth Type": cred["auth_type"],
+                    "Data (JSON)": json.dumps(json.loads(cred["data"]), indent=2),
+                    "Created By": cred["created_by"],
+                    "Created At": cred["created_at"],
+                    "Updated At": cred["updated_at"],
+                    "Allow Self Rotation": cred["allow_self_rotation"]
+                })
+            
+            df = pd.DataFrame(db_data)
+            
+            # Display row count
+            st.metric("Total Credentials", len(credentials))
+            
+            # Display table
+            st.dataframe(
+                df,
+                use_container_width=True,
+                hide_index=True,
+                height=400
+            )
+            
+            # Export option
+            if st.button("📥 Export Credentials to CSV"):
+                csv_buffer = io.StringIO()
+                df.to_csv(csv_buffer, index=False)
+                csv_data = csv_buffer.getvalue()
+                
+                st.download_button(
+                    label="💾 Download CSV",
+                    data=csv_data,
+                    file_name=f"credentials_export_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv"
+                )
+        else:
+            st.info("No credentials in database yet.")
+    
+    with db_tab2:
+        st.subheader("Audit Logs Table (Raw Data)")
+        
+        # Get all audit logs
+        logs = cred_manager.get_audit_logs()
+        
+        if logs:
+            # Create dataframe
+            log_data = []
+            for log in logs:
+                # Get supplier name from credential
+                cred = next((c for c in credentials if c["id"] == log["cred_id"]), None)
+                supplier = cred["supplier"] if cred else f"ID:{log['cred_id']}"
+                
+                log_data.append({
+                    "Log ID": log["id"],
+                    "Credential ID": log["cred_id"],
+                    "Supplier": supplier,
+                    "Action": log["action"],
+                    "Actor": log["actor"],
+                    "Details": log["details"],
+                    "Timestamp": log["timestamp"]
+                })
+            
+            df_logs = pd.DataFrame(log_data)
+            
+            # Display row count
+            st.metric("Total Audit Entries", len(logs))
+            
+            # Display table
+            st.dataframe(
+                df_logs,
+                use_container_width=True,
+                hide_index=True,
+                height=400
+            )
+            
+            # Export option
+            if st.button("📥 Export Audit Logs to CSV"):
+                csv_buffer = io.StringIO()
+                df_logs.to_csv(csv_buffer, index=False)
+                csv_data = csv_buffer.getvalue()
+                
+                st.download_button(
+                    label="💾 Download CSV",
+                    data=csv_data,
+                    file_name=f"audit_logs_export_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                    mime="text/csv"
+                )
+        else:
+            st.info("No audit logs in database yet.")
+    
+    with db_tab3:
+        st.subheader("Database Statistics")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("Total Credentials", len(credentials))
+            st.metric("Total Audit Logs", len(logs) if logs else 0)
+        
+        with col2:
+            if credentials:
+                # Count by environment
+                env_counts = {}
+                for cred in credentials:
+                    env = cred["environment"]
+                    env_counts[env] = env_counts.get(env, 0) + 1
+                
+                st.markdown("**By Environment:**")
+                for env, count in env_counts.items():
+                    st.write(f"- {env}: {count}")
+        
+        with col3:
+            if credentials:
+                # Count by auth type
+                auth_counts = {}
+                for cred in credentials:
+                    auth = cred["auth_type"]
+                    auth_counts[auth] = auth_counts.get(auth, 0) + 1
+                
+                st.markdown("**By Auth Type:**")
+                for auth, count in auth_counts.items():
+                    st.write(f"- {auth}: {count}")
+        
+        # Action statistics
+        if logs:
+            st.markdown("---")
+            st.markdown("**Actions Over Time:**")
+            
+            action_counts = {}
+            for log in logs:
+                action = log["action"]
+                action_counts[action] = action_counts.get(action, 0) + 1
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**Action Types:**")
+                for action, count in sorted(action_counts.items(), key=lambda x: x[1], reverse=True):
+                    st.write(f"- {action}: {count}")
+            
+            with col2:
+                # Most active actors
+                actor_counts = {}
+                for log in logs:
+                    actor = log["actor"]
+                    actor_counts[actor] = actor_counts.get(actor, 0) + 1
+                
+                st.markdown("**Most Active Users:**")
+                for actor, count in sorted(actor_counts.items(), key=lambda x: x[1], reverse=True)[:5]:
+                    st.write(f"- {actor}: {count} actions")
+    
+    # SQL Query Runner (for advanced demo)
+    st.markdown("---")
+    st.markdown("### 🔧 Advanced: SQL Query Runner")
+    
+    with st.expander("Run Custom SQL Query (Read-Only)"):
+        st.warning("⚠️ This is for demo purposes only. Only SELECT queries are allowed.")
+        
+        query = st.text_area(
+            "SQL Query:",
+            value="SELECT * FROM credentials LIMIT 10;",
+            help="Enter a SELECT query to run against the database"
+        )
+        
+        if st.button("▶️ Run Query"):
+            if query.strip().upper().startswith("SELECT"):
+                try:
+                    import sqlite3
+                    conn = sqlite3.connect("credentials.db")
+                    conn.row_factory = sqlite3.Row
+                    cursor = conn.cursor()
+                    
+                    cursor.execute(query)
+                    results = cursor.fetchall()
+                    conn.close()
+                    
+                    if results:
+                        # Convert to dataframe
+                        result_data = [dict(row) for row in results]
+                        df_results = pd.DataFrame(result_data)
+                        
+                        st.success(f"✅ Query executed successfully. {len(results)} rows returned.")
+                        st.dataframe(df_results, use_container_width=True, hide_index=True)
+                    else:
+                        st.info("Query executed successfully but returned no results.")
+                        
+                except Exception as e:
+                    st.error(f"❌ Error executing query: {str(e)}")
+            else:
+                st.error("❌ Only SELECT queries are allowed for safety reasons.")
 
 # Run the app
 if __name__ == "__main__":

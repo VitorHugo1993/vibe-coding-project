@@ -3,7 +3,7 @@ Nezasa Connect API - Credential Management REST API
 FastAPI backend for credential management operations
 """
 
-from fastapi import FastAPI, HTTPException, Depends, Header, status
+from fastapi import FastAPI, HTTPException, Depends, Header, status, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
@@ -12,6 +12,8 @@ import sqlite3
 import json
 import hashlib
 import uuid
+import logging
+import time
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -33,6 +35,41 @@ app.add_middleware(
 
 # Database path
 DB_PATH = "credentials.db"
+
+# Setup logging to file for demo purposes
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('api_requests.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# Middleware to log all requests
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log all API requests for demo purposes"""
+    start_time = time.time()
+    
+    # Get API key from header
+    api_key = request.headers.get("x-api-key", "none")
+    role = VALID_API_KEYS.get(api_key, {}).get("role", "unknown")
+    
+    # Log request
+    logger.info(f"➡️  {request.method} {request.url.path} | Role: {role}")
+    
+    # Process request
+    response = await call_next(request)
+    
+    # Calculate duration
+    duration = time.time() - start_time
+    
+    # Log response
+    logger.info(f"⬅️  {request.method} {request.url.path} | Status: {response.status_code} | Duration: {duration:.3f}s")
+    
+    return response
 
 # ==================== Models ====================
 

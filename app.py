@@ -2034,39 +2034,70 @@ def api_monitor_tab():
         st.rerun()
     
     # Read API request log file
-    try:
-        with open("api_requests.log", "r") as f:
-            log_lines = f.readlines()
+    log_file_path = "api_requests.log"
+    
+    # Check if file exists and show appropriate message
+    if not os.path.exists(log_file_path):
+        st.warning("⚠️ API log file not found. The API server needs to be running to generate logs.")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("**📍 Current Directory:**")
+            st.code(os.getcwd())
+        
+        with col2:
+            st.markdown("**📂 Log File Expected:**")
+            st.code(log_file_path)
+        
+        st.markdown("""
+        **To start the API server:**
+        
+        ```bash
+        # Option 1: Direct Python
+        python3 api.py
+        
+        # Option 2: Using uvicorn
+        python3 -m uvicorn api:app --host 0.0.0.0 --port 8000
+        
+        # Option 3: Background (keeps running)
+        nohup python3 -m uvicorn api:app --host 0.0.0.0 --port 8000 > api_server.log 2>&1 &
+        ```
+        
+        **Then make a test request:**
+        ```bash
+        curl -X GET http://localhost:8000/api/v1/credentials \\
+          -H "X-API-Key: admin_key_123"
+        ```
+        
+        **Or open interactive docs:**
+        http://localhost:8000/api/docs
+        """)
+    else:
+        try:
+            with open(log_file_path, "r") as f:
+                log_lines = f.readlines()
+                
             # Get last 50 lines
             recent_logs = log_lines[-50:] if len(log_lines) > 50 else log_lines
             
             if recent_logs:
-                # Display in a nice format
+                # Display in a nice format with line count
+                st.success(f"✅ API server is active! Showing last {len(recent_logs)} log entries.")
                 log_text = "".join(recent_logs)
                 st.code(log_text, language="log")
             else:
-                st.info("📭 No API requests yet. Start the API server and make some requests!")
+                st.info("📭 Log file exists but is empty. Make some API requests to see them here!")
                 st.markdown("""
-                **Quick Start:**
+                **Quick test request:**
                 ```bash
-                # Terminal 1: Start API
-                python3 api.py
-                
-                # Terminal 2: Make a test request
                 curl -X GET http://localhost:8000/api/v1/credentials \\
                   -H "X-API-Key: admin_key_123"
                 ```
                 """)
-    except FileNotFoundError:
-        st.warning("⚠️ API log file not found. Make sure the API server has been started at least once.")
-        st.markdown("""
-        **To start the API:**
-        ```bash
-        python3 api.py
-        ```
-        
-        Then make requests using curl or the interactive docs at http://localhost:8000/api/docs
-        """)
+        except Exception as e:
+            st.error(f"❌ Error reading log file: {str(e)}")
+            st.code(f"File path: {os.path.abspath(log_file_path)}")
     
     st.markdown("---")
     

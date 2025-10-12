@@ -2086,12 +2086,15 @@ def api_monitor_tab():
             # Create dataframe with all fields
             db_data = []
             for cred in credentials:
+                # cred["data"] is already a dict, just format it nicely
+                data_str = json.dumps(cred["data"], indent=2) if isinstance(cred["data"], dict) else str(cred["data"])
+                
                 db_data.append({
                     "ID": cred["id"],
                     "Supplier": cred["supplier"],
                     "Environment": cred["environment"],
                     "Auth Type": cred["auth_type"],
-                    "Data (JSON)": json.dumps(json.loads(cred["data"]), indent=2),
+                    "Data (JSON)": data_str,
                     "Created By": cred["created_by"],
                     "Created At": cred["created_at"],
                     "Updated At": cred["updated_at"],

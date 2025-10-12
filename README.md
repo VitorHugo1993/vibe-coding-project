@@ -98,6 +98,61 @@ Select from the sidebar:
 
 ---
 
+## 📊 Viewing API Logs
+
+The API server logs all requests to `api_requests.log`. You have several ways to view these logs:
+
+### Option 1: HTML Log Viewer (Recommended for Demo)
+
+Open in your browser:
+```bash
+open view_logs.html
+```
+Or just double-click `view_logs.html` in Finder.
+
+**Features:**
+- 🎨 Beautiful dark theme UI
+- 🔄 Auto-refresh every 2 seconds
+- 📊 Request statistics
+- 🎯 Color-coded requests/responses
+- 🖥️ Great for screen sharing
+
+### Option 2: Terminal Log Watcher
+
+Real-time colored terminal output:
+```bash
+python3 watch_logs.py
+```
+
+**Features:**
+- 🌈 Color-coded output
+- ⚡ Real-time updates
+- 📜 Shows last 20 existing logs
+- 💻 Perfect for technical demos
+
+### Option 3: Simple Terminal Commands
+
+```bash
+# View all logs
+cat api_requests.log
+
+# Watch logs in real-time
+tail -f api_requests.log
+
+# View last 20 lines
+tail -n 20 api_requests.log
+
+# Filter by method
+grep "GET" api_requests.log
+grep "POST" api_requests.log
+
+# Filter by status code
+grep "Status: 200" api_requests.log
+grep "Status: 4" api_requests.log  # Client errors
+```
+
+---
+
 ## 🧪 Testing the API
 
 ### Example: Create a Credential

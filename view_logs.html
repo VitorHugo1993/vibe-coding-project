@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nezasa Connect API - Request Logs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Monaco', 'Consolas', monospace;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            background: #252526;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .controls button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .controls button:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+        }
+        
+        .controls label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .controls input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status.active {
+            background: #28a745;
+            color: white;
+        }
+        
+        .status.inactive {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .log-container {
+            background: #1e1e1e;
+            border: 2px solid #3e3e42;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .log-line {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        
+        .log-line:hover {
+            background: #2d2d30;
+        }
+        
+        .log-line.request {
+            color: #4ec9b0;
+        }
+        
+        .log-line.response {
+            color: #ce9178;
+        }
+        
+        .log-line.error {
+            color: #f48771;
+            background: rgba(244, 135, 113, 0.1);
+        }
+        
+        .log-timestamp {
+            color: #858585;
+            margin-right: 10px;
+        }
+        
+        .log-method {
+            color: #569cd6;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .log-path {
+            color: #dcdcaa;
+        }
+        
+        .log-status {
+            color: #4ec9b0;
+            margin-left: 10px;
+        }
+        
+        .log-role {
+            color: #c586c0;
+            margin-left: 10px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #858585;
+        }
+        
+        .empty-state h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #d4d4d4;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #252526;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .stat-card h4 {
+            font-size: 12px;
+            color: #858585;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #dc3545;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #3e3e42;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 Nezasa Connect API - Request Monitor</h1>
+        <p>Real-time API request logs for credential management system</p>
+    </div>
+    
+    <div class="stats">
+        <div class="stat-card">
+            <h4>Total Requests</h4>
+            <div class="value" id="totalRequests">0</div>
+        </div>
+        <div class="stat-card">
+            <h4>Last Update</h4>
+            <div class="value" id="lastUpdate" style="font-size: 14px;">Never</div>
+        </div>
+        <div class="stat-card">
+            <h4>Auto-refresh</h4>
+            <div class="value" id="autoRefreshStatus">OFF</div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button onclick="refreshLogs()">🔄 Refresh Now</button>
+        <button onclick="clearDisplay()">🗑️ Clear Display</button>
+        <label>
+            <input type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()">
+            Auto-refresh (every 2s)
+        </label>
+        <span class="status inactive" id="status">Not Connected</span>
+    </div>
+    
+    <div class="log-container" id="logContainer">
+        <div class="empty-state">
+            <h3>📭 No logs yet</h3>
+            <p>Make API requests to see them appear here</p>
+        </div>
+    </div>
+    
+    <script>
+        let autoRefreshInterval = null;
+        let logCache = [];
+        
+        function parseLogLine(line) {
+            // Parse log format: "2025-10-12 10:33:35,143 - INFO - ➡️  GET / | Role: admin"
+            const parts = line.split(' - ');
+            if (parts.length < 3) return null;
+            
+            const timestamp = parts[0];
+            const message = parts[2];
+            
+            const isRequest = message.includes('➡️');
+            const isResponse = message.includes('⬅️');
+            
+            let html = '<div class="log-line ' + (isRequest ? 'request' : 'response') + '">';
+            html += '<span class="log-timestamp">' + timestamp + '</span>';
+            
+            if (isRequest || isResponse) {
+                const arrow = isRequest ? '➡️' : '⬅️';
+                const parts = message.split('|');
+                const methodPath = parts[0].replace(arrow, '').trim();
+                const methodParts = methodPath.split(' ');
+                
+                html += '<span class="log-method">' + methodParts[0] + '</span>';
+                html += '<span class="log-path">' + methodParts.slice(1).join(' ') + '</span>';
+                
+                if (parts.length > 1) {
+                    parts.slice(1).forEach(part => {
+                        if (part.includes('Role:')) {
+                            html += '<span class="log-role">' + part.trim() + '</span>';
+                        } else if (part.includes('Status:')) {
+                            html += '<span class="log-status">' + part.trim() + '</span>';
+                        } else {
+                            html += '<span>' + part.trim() + '</span>';
+                        }
+                    });
+                }
+            } else {
+                html += '<span>' + message + '</span>';
+            }
+            
+            html += '</div>';
+            return html;
+        }
+        
+        async function fetchLogs() {
+            try {
+                const response = await fetch('api_requests.log?' + new Date().getTime());
+                const text = await response.text();
+                
+                if (!text.trim()) {
+                    return [];
+                }
+                
+                return text.trim().split('\n');
+            } catch (error) {
+                console.error('Error fetching logs:', error);
+                document.getElementById('status').textContent = 'Error Loading';
+                document.getElementById('status').className = 'status inactive';
+                return [];
+            }
+        }
+        
+        async function refreshLogs() {
+            const logs = await fetchLogs();
+            
+            if (logs.length === 0) {
+                return;
+            }
+            
+            logCache = logs;
+            const container = document.getElementById('logContainer');
+            container.innerHTML = '';
+            
+            logs.forEach(line => {
+                const parsed = parseLogLine(line);
+                if (parsed) {
+                    container.innerHTML += parsed;
+                }
+            });
+            
+            // Update stats
+            document.getElementById('totalRequests').textContent = Math.floor(logs.length / 2);
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            document.getElementById('status').textContent = 'Connected';
+            document.getElementById('status').className = 'status active';
+            
+            // Auto-scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function clearDisplay() {
+            document.getElementById('logContainer').innerHTML = `
+                <div class="empty-state">
+                    <h3>📭 Display cleared</h3>
+                    <p>Click "Refresh Now" to reload logs</p>
+                </div>
+            `;
+            document.getElementById('totalRequests').textContent = '0';
+        }
+        
+        function toggleAutoRefresh() {
+            const checkbox = document.getElementById('autoRefresh');
+            const statusElement = document.getElementById('autoRefreshStatus');
+            
+            if (checkbox.checked) {
+                autoRefreshInterval = setInterval(refreshLogs, 2000);
+                statusElement.textContent = 'ON';
+                statusElement.style.color = '#28a745';
+                refreshLogs(); // Immediate refresh
+            } else {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                    autoRefreshInterval = null;
+                }
+                statusElement.textContent = 'OFF';
+                statusElement.style.color = '#dc3545';
+            }
+        }
+        
+        // Initial load
+        refreshLogs();
+    </script>
+</body>
+</html>
+

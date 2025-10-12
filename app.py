@@ -1546,7 +1546,7 @@ def main():
     st.session_state.current_role = selected_role
     
     # Main tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Dashboard", "➕ Create Credential", "📋 Audit Logs", "🔍 API Monitor"])
+    tab1, tab2, tab3 = st.tabs(["📊 Dashboard", "➕ Create Credential", "📋 Audit Logs"])
     
     with tab1:
         dashboard_tab()
@@ -1556,9 +1556,6 @@ def main():
     
     with tab3:
         audit_logs_tab()
-    
-    with tab4:
-        api_monitor_tab()
 
 def dashboard_tab():
     """Dashboard tab with credential table and management actions"""

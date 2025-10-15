@@ -21,7 +21,7 @@ except ImportError:
     SQLALCHEMY_AVAILABLE = False
 
 # API Configuration
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = "http://127.0.0.1:8000"
 API_KEY_MAP = {
     "admin": "admin_key_123",
     "devops": "devops_key_456",
@@ -1623,19 +1623,6 @@ def dashboard_tab():
             st.success(f"✅ Credential {cred_id} updated successfully!")
             st.session_state[key] = False  # Clear the flag
     
-    # Show info about API integration
-    if st.session_state.current_role == "admin":
-        with st.expander("ℹ️ API Integration Info", expanded=False):
-            st.info("**💡 Tip:** After making changes via the API, click the '🔄 Refresh Data' button above to see them here.")
-            st.markdown("""
-            **API is running at:** http://localhost:8000
-            
-            **To verify latest data:**
-            ```bash
-            # Check database directly
-            sqlite3 credentials.db "SELECT id, supplier FROM credentials ORDER BY id DESC LIMIT 5;"
-            ```
-            """)
     
     # Get all credentials
     credentials = cred_manager.get_all_credentials()

@@ -21,7 +21,7 @@ except ImportError:
     SQLALCHEMY_AVAILABLE = False
 
 # API Configuration
-API_BASE_URL = "http://127.0.0.1:8000"
+API_BASE_URL = "https://your-api-url-here.onrender.com"  # Replace with your actual Render/Railway URL
 API_KEY_MAP = {
     "admin": "admin_key_123",
     "devops": "devops_key_456",

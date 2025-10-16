@@ -21,7 +21,7 @@ except ImportError:
     SQLALCHEMY_AVAILABLE = False
 
 # API Configuration
-API_BASE_URL = "http://127.0.0.1:8000"  # Local development - update with Railway URL when deployed
+API_BASE_URL = "https://vibe-coding-project-production.up.railway.app"  # Railway production API
 API_KEY_MAP = {
     "admin": "admin_key_123",
     "devops": "devops_key_456",

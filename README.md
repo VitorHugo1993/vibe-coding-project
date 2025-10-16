@@ -6,15 +6,29 @@ A comprehensive credential management system with both a **Streamlit UI** and a 
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
+### ☁️ Production Deployment (Recommended)
+
+The application is deployed and ready to use:
+
+- **Streamlit UI:** Access via Streamlit Cloud (check your deployment)
+- **REST API:** `https://vibe-coding-project-production.up.railway.app`
+- **API Documentation:** `https://vibe-coding-project-production.up.railway.app/api/docs`
+
+No local setup required! Just visit the URLs above.
+
+---
+
+### 💻 Local Development
+
+#### 1. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Run the Application
+#### 2. Run the Application
 
-#### Option A: Streamlit UI (Recommended for Demo)
+##### Option A: Streamlit UI (Recommended for Demo)
 
 ```bash
 streamlit run app.py
@@ -22,7 +36,7 @@ streamlit run app.py
 
 Access the UI at: **http://localhost:8501**
 
-#### Option B: REST API
+##### Option B: REST API (Local)
 
 ```bash
 python api.py
@@ -38,7 +52,7 @@ Access the API at: **http://localhost:8000**
 
 Interactive API docs: **http://localhost:8000/api/docs**
 
-#### Option C: Run Both Simultaneously
+##### Option C: Run Both Simultaneously
 
 **Terminal 1:**
 ```bash
@@ -49,6 +63,8 @@ streamlit run app.py
 ```bash
 python api.py
 ```
+
+> **Note:** The Streamlit app is configured to use the Railway production API by default. To use your local API, update `API_BASE_URL` in `app.py` to `http://127.0.0.1:8000`
 
 ---
 
@@ -155,8 +171,27 @@ grep "Status: 4" api_requests.log  # Client errors
 
 ## 🧪 Testing the API
 
+### Using Production API (Railway)
+
+Replace `http://localhost:8000` with `https://vibe-coding-project-production.up.railway.app` in the examples below to test the production API.
+
 ### Example: Create a Credential
 
+**Production:**
+```bash
+curl -X POST https://vibe-coding-project-production.up.railway.app/api/v1/credentials \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: admin_key_123" \
+  -d '{
+    "supplier": "Stripe",
+    "environment": "production",
+    "auth_type": "api_key",
+    "data": {"api_key": "sk_live_xyz123"},
+    "allow_self_rotation": false
+  }'
+```
+
+**Local:**
 ```bash
 curl -X POST http://localhost:8000/api/v1/credentials \
   -H "Content-Type: application/json" \
@@ -172,6 +207,13 @@ curl -X POST http://localhost:8000/api/v1/credentials \
 
 ### Example: List All Credentials
 
+**Production:**
+```bash
+curl -X GET https://vibe-coding-project-production.up.railway.app/api/v1/credentials \
+  -H "X-API-Key: admin_key_123"
+```
+
+**Local:**
 ```bash
 curl -X GET http://localhost:8000/api/v1/credentials \
   -H "X-API-Key: admin_key_123"
@@ -179,10 +221,23 @@ curl -X GET http://localhost:8000/api/v1/credentials \
 
 ### Example: Rotate a Credential
 
+**Production:**
+```bash
+curl -X POST https://vibe-coding-project-production.up.railway.app/api/v1/credentials/1/rotate \
+  -H "X-API-Key: admin_key_123"
+```
+
+**Local:**
 ```bash
 curl -X POST http://localhost:8000/api/v1/credentials/1/rotate \
   -H "X-API-Key: admin_key_123"
 ```
+
+### Interactive API Documentation
+
+Visit the Swagger UI to test the API interactively:
+- **Production:** `https://vibe-coding-project-production.up.railway.app/api/docs`
+- **Local:** `http://localhost:8000/api/docs`
 
 ---
 
@@ -232,6 +287,44 @@ CS team can safely view credential information (masked) to assist customers.
 
 ### 4. Audit & Compliance
 Admin can review complete audit trails for security and compliance requirements.
+
+---
+
+## ☁️ Deployment
+
+### Current Production Setup
+
+- **API Backend:** Deployed on [Railway](https://railway.app)
+  - URL: `https://vibe-coding-project-production.up.railway.app`
+  - Database: SQLite (auto-deployed with the app)
+  - Free tier: 500 hours/month
+  
+- **Streamlit UI:** Deployed on [Streamlit Cloud](https://streamlit.io/cloud)
+  - Connects to Railway API
+  - Auto-deploys on Git push
+
+### Deploy Your Own
+
+#### Deploy API to Railway:
+1. Go to [railway.app](https://railway.app)
+2. Sign up with GitHub
+3. Click "Deploy from GitHub repo"
+4. Select your repository
+5. Railway auto-detects and deploys
+6. Copy your Railway URL
+7. Update `API_BASE_URL` in `app.py`
+
+#### Deploy UI to Streamlit Cloud:
+1. Go to [streamlit.io/cloud](https://streamlit.io/cloud)
+2. Sign up with GitHub
+3. Click "New app"
+4. Select your repository and `app.py`
+5. Deploy!
+
+See deployment guides:
+- [railway-deploy.md](./railway-deploy.md)
+- [render-deploy.md](./render-deploy.md)
+- [heroku-deploy.md](./heroku-deploy.md)
 
 ---
 
